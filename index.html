@@ -20,7 +20,7 @@
   --r: #e8443a; --b: #2f86d6; --y: #f0b429; --p: #f2a0c0; --k: #2b2b31; --m: #7b46c4;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
-  --rival-dock-h: calc(108px + var(--safe-t));
+  --rival-dock-h: calc(116px + var(--safe-t));
   --me-dock-h: calc(140px + var(--safe-b));
 }
 
@@ -251,8 +251,8 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   background: var(--m); border: 1px solid #c6a7f2; box-shadow: 0 0 6px #9f6be8aa;
 }
 .collection-strip {
-  display: flex; align-items: center; gap: 5px; min-height: 58px; max-width: 100%;
-  max-height: 62px; padding: 2px 2px 2px 1px; overflow-x: auto; overflow-y: hidden;
+  display: flex; align-items: center; gap: 5px; min-height: 64px; max-width: 100%;
+  max-height: 64px; padding: 2px 2px 2px 1px; overflow-x: auto; overflow-y: hidden;
   overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #53617b transparent;
 }
 .collection-strip::-webkit-scrollbar { height: 3px; }
@@ -278,6 +278,8 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .collection-card img {
   position: absolute; left: 7px; top: 16px; width: 30px; height: 29px; object-fit: contain;
 }
+.collection-card.has-evo { flex-basis: 62px; width: 62px; height: 60px; }
+.collection-card.has-evo img { left: 20px; top: 16px; width: 22px; height: 22px; }
 .collection-vp {
   position: absolute; z-index: 2; left: 3px; top: 2px;
   color: #fff; font-size: 9px; line-height: 1; font-weight: 900; text-shadow: 0 1px 1px #0008;
@@ -289,6 +291,15 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   overflow: hidden; color: #252b35; font-size: 7px; font-weight: 800;
   line-height: 10px; text-align: center; text-overflow: ellipsis; white-space: nowrap;
 }
+.collection-evo {
+  position: absolute; z-index: 2; inset: auto 2px 10px;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  height: 10px; color: #424b5e; font-size: 6px; font-weight: 800; white-space: nowrap;
+}
+.evo-label { color: #59667f; letter-spacing: -.3px; }
+.evo-need { display: inline-flex; align-items: center; gap: 1px; color: #252c39; }
+.evo-need .pball { width: 9px; height: 9px; }
+.evo-need b { font-size: 8px; line-height: 1; }
 .kept-card { box-shadow: 0 0 0 2px #a875e8, 0 2px 5px #0009; }
 .kept-card::after {
   content: ''; position: absolute; z-index: 3; right: 2px; bottom: 2px;
@@ -359,11 +370,14 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 }
 
 @media (max-height: 560px) {
-  :root { --rival-dock-h: calc(96px + var(--safe-t)); --me-dock-h: calc(108px + var(--safe-b)); }
+  :root { --rival-dock-h: calc(102px + var(--safe-t)); --me-dock-h: calc(108px + var(--safe-b)); }
   .dock-meta, .dock-stat em, .me-mid { display: none; }
-  .collection-strip { min-height: 50px; }
+  .collection-strip { min-height: 52px; max-height: 52px; }
   .collection-card { flex-basis: 38px; width: 38px; height: 48px; }
   .collection-card img { left: 6px; top: 14px; width: 26px; height: 25px; }
+  .collection-card.has-evo { flex-basis: 56px; width: 56px; height: 50px; }
+  .collection-card.has-evo img { left: 18px; top: 14px; width: 20px; height: 19px; }
+  .collection-evo { bottom: 9px; }
   .collection-name { font-size: 6px; }
   .toast { bottom: calc(104px + var(--safe-b)); }
 }
@@ -1420,14 +1434,23 @@ function cardNode(c, opts = {}) {
 /** 고정 현황 패널용 카드. 작은 크기에서도 이름·점수·보너스가 읽히게 단순화한다. */
 function collectionCardNode(c, opts = {}) {
   const interactive = Boolean(opts.interactive);
-  const n = el(interactive ? 'button' : 'div', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}`);
+  const evolution = opts.showEvolution && c.to && c.need;
+  const n = el(interactive ? 'button' : 'div', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}${evolution ? ' has-evo' : ''}`);
   if (interactive) n.type = 'button';
-  n.title = `${c.label} · ${c.vp}점 · ${BALL[c.color].name} 보너스 ${c.bonus}`;
+  const evolutionTitle = evolution
+    ? ` · 진화 조건 ${Object.entries(c.need).map(([color, amount]) => `${BALL[color].name} 보너스 ${amount}`).join(', ')}`
+    : '';
+  n.title = `${c.label} · ${c.vp}점 · ${BALL[c.color].name} 보너스 ${c.bonus}${evolutionTitle}`;
   n.setAttribute('aria-label', n.title);
+  const evolutionBadge = evolution
+    ? `<span class="collection-evo"><span class="evo-label">진화→</span>${Object.entries(c.need).map(([color, amount]) =>
+        `<span class="evo-need ${color}">${pball(color, 'tiny')}<b>${amount}</b></span>`).join('')}</span>`
+    : '';
   n.innerHTML =
     `<span class="collection-vp">${c.vp}</span>` +
     `<span class="collection-bonus">${pball(c.color)}${c.bonus === 2 ? pball(c.color) : ''}</span>` +
     `<img src="${spriteUrl(c.dex)}" loading="lazy" alt="">` +
+    evolutionBadge +
     `<span class="collection-name">${c.label}</span>`;
   if (interactive) n.onclick = () => onCardTap(c);
   return n;
@@ -1515,7 +1538,7 @@ function render() {
     (COLORS.some((c) => mb[c]) ? COLORS.filter((c) => mb[c]).map((c) => pip(c, mb[c])).join('') : '<span class="lb" style="width:auto">없음</span>');
   $('#me-owned-count').textContent = me.board.length;
   $('#me-kept-count').textContent = me.hand.length;
-  renderCollection('#me-owned', me.board);
+  renderCollection('#me-owned', me.board, { showEvolution: true });
   renderCollection('#me-kept', me.hand, { interactive: myTurn, kept: true });
 
   // 액션바 — 고른 토큰은 눌러서 뺄 수 있다
