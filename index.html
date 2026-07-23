@@ -93,8 +93,9 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 /* ── 게임 레이아웃 ─────────────────────────────────── */
 #game {
   position: fixed; inset: 0; z-index: 0;
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
-  height: 100dvh; overflow: hidden; background: var(--bg); isolation: isolate;
+  display: grid;
+  grid-template-rows: clamp(100px, 19dvh, 120px) minmax(0, 1fr) clamp(112px, 24dvh, 150px);
+  height: 100dvh; min-height: 0; overflow: hidden; background: var(--bg); isolation: isolate;
 }
 .playfield {
   display: flex; flex-direction: column; min-height: 0; width: 100%;
@@ -105,7 +106,8 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rowlabel { font-size: 9px; color: var(--dim); margin: 0 2px 1px; letter-spacing: .3px; font-weight: 600; line-height: 1.15; }
 .rowlabel.tappable { color: var(--acc); cursor: pointer; }
 .rowlabel.tappable::after { content: ' · 예약'; font-weight: 400; opacity: .8; }
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; align-content: start; }
+.cards .card { width: 100%; min-width: 0; max-width: 120px; justify-self: center; }
 
 /* ── 카드 ── 실물 카드 구도: 색 리본 → (진화예고) → 흰 아트 → 코인 스택 → 이름 알약 */
 .card {
@@ -206,11 +208,11 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .player-dock.active { box-shadow: inset 0 0 0 1px var(--acc), 0 5px 18px #0008; }
 .rivalbar {
   top: 0; padding: max(4px, env(safe-area-inset-top, 0px)) 7px 5px;
-  border-bottom: 1px solid var(--line); box-shadow: 0 5px 18px #0008;
+  border-bottom: 1px solid var(--line); box-shadow: 0 5px 18px #0008; overflow: hidden;
 }
 .me {
   bottom: 0; padding: 4px 8px calc(5px + var(--safe-b));
-  border-top: 1px solid var(--line); box-shadow: 0 -5px 18px #0008;
+  border-top: 1px solid var(--line); box-shadow: 0 -5px 18px #0008; overflow: hidden;
 }
 .dock-summary {
   display: flex; align-items: center; gap: 6px; min-height: 21px;
@@ -247,7 +249,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 }
 .collection-strip {
   display: flex; align-items: center; gap: 5px; min-height: 58px; max-width: 100%;
-  padding: 2px 2px 2px 1px; overflow-x: auto; overflow-y: hidden;
+  max-height: 62px; padding: 2px 2px 2px 1px; overflow-x: auto; overflow-y: hidden;
   overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #53617b transparent;
 }
 .collection-strip::-webkit-scrollbar { height: 3px; }
@@ -301,7 +303,10 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .tok.k { background: var(--k); color: var(--acc); } .tok.m { background: var(--m); color: #fff; }
 
 /* ── 내 영역 — 상태·확정/취소를 한 줄에 압축 ─────────── */
-.me-head { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
+.me-head {
+  position: relative; display: flex; align-items: center; gap: 5px;
+  min-height: 25px; padding-right: 145px; font-size: 12px; font-weight: 700;
+}
 #me-name { flex: none; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-head .score { color: var(--acc); font-size: 15px; flex: none; }
 #status {
@@ -315,8 +320,13 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   content: '×'; position: absolute; top: -6px; right: -5px; width: 13px; height: 13px;
   background: #000c; color: #fff; border-radius: 50%; font-size: 10px; line-height: 13px; text-align: center;
 }
-.me-head .btns { display: flex; gap: 3px; flex: none; }
-.me-head .btns button { padding: 3px 9px; font-size: 11px; border-radius: 7px; line-height: 1.6; }
+.me-head .btns {
+  position: absolute; top: 0; right: 0; z-index: 2;
+  display: flex; gap: 3px; padding-left: 4px; background: var(--panel);
+}
+.me-head .btns button {
+  min-width: 43px; padding: 3px 7px; font-size: 11px; border-radius: 7px; line-height: 1.6;
+}
 #menu { padding: 3px 7px !important; }
 
 .me-mid { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; align-items: center; min-height: 15px; }
