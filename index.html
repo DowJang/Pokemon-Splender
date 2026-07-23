@@ -35,12 +35,32 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* ── 로비 ──────────────────────────────────────────── */
 .screen { min-height: 100%; }
-#lobby { padding: 28px 18px calc(28px + var(--safe-b)); max-width: 520px; margin: 0 auto; }
-.lobby-head h1 {
-  margin: 12px 0 4px; font-size: 34px; line-height: 1.05; font-weight: 800; letter-spacing: -0.5px;
+#lobby { padding: 20px 18px calc(28px + var(--safe-b)); max-width: 520px; margin: 0 auto; }
+
+.lobby-head { margin-bottom: 8px; }
+.hero {
+  position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between;
+  min-height: 112px; padding: 16px 6px 16px 18px; border-radius: 18px;
+  background:
+    radial-gradient(circle at 26% 22%, #ffffff30, transparent 55%),
+    linear-gradient(135deg, #1a5fb4 0%, #2f86d6 48%, #4dabe8 100%);
+  box-shadow: 0 8px 22px #0007, inset 0 0 0 1px #ffffff26;
 }
-.lobby-head h1 span { color: var(--acc); }
-.lobby-head .sub { margin: 0 0 22px; color: var(--dim); font-size: 13px; }
+.hero h1 {
+  position: relative; z-index: 2; margin: 0; flex: none;
+  font-size: 27px; line-height: 1.08; font-weight: 900; letter-spacing: -0.5px;
+  color: #fff; text-shadow: 0 2px 5px #00000055;
+}
+.hero h1 span { color: var(--acc); text-shadow: 0 2px 5px #00000055; }
+.hero-art { position: relative; flex: none; width: 42%; min-width: 128px; height: 92px; }
+.hero-mon {
+  position: absolute; bottom: -8px; height: 72px; width: auto; object-fit: contain;
+  filter: drop-shadow(0 5px 6px #00000050);
+}
+.hero-mon.m1 { right: 60%; height: 56px; bottom: -2px; z-index: 1; }
+.hero-mon.m2 { right: 24%; height: 88px; bottom: -10px; z-index: 3; }
+.hero-mon.m3 { right: -6px; height: 60px; bottom: 0; z-index: 2; }
+.lobby-head .sub { margin: 10px 2px 22px; color: var(--dim); font-size: 13px; }
 
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
 .panel h2 { margin: 0 0 10px; font-size: 13px; color: var(--dim); font-weight: 600; letter-spacing: .3px; }
@@ -74,24 +94,22 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 /* ── 게임 레이아웃 ─────────────────────────────────── */
 #game { display: flex; flex-direction: column; height: 100dvh; }
 
-.rivalbar { display: flex; gap: 6px; padding: 6px 8px; overflow-x: auto; background: var(--bg2); border-bottom: 1px solid var(--line); flex: none; }
+.rivalbar { display: flex; gap: 4px; padding: 3px 6px; overflow-x: auto; background: var(--bg2); border-bottom: 1px solid var(--line); flex: none; }
 .rivalbar::-webkit-scrollbar { display: none; }
-.rv { flex: none; min-width: 108px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
+.rv { flex: none; min-width: 128px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 3px 7px; display: flex; align-items: center; }
 .rv.active { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
-.rv .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
-.rv .top b { font-size: 15px; color: var(--acc); }
-.rv .lvl { font-size: 10px; color: var(--dim); }
-.rv .chips { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+.rv .top { display: flex; align-items: center; gap: 4px; font-size: 11px; line-height: 1; white-space: nowrap; width: 100%; }
+.rv .top b { font-size: 13px; color: var(--acc); }
+.rv .top i { font-size: 9px; font-style: normal; color: var(--dim); overflow: hidden; text-overflow: ellipsis; }
+.rv .chips { display: inline-flex; gap: 2px; margin-left: auto; line-height: 0; }
+.rv .chips:empty { display: none; }
 
-.board { flex: 1; overflow-y: auto; padding: 8px; -webkit-overflow-scrolling: touch; }
-.rowwrap, .row-special { margin-bottom: 8px; }
-.rowlabel { font-size: 11px; color: var(--dim); margin: 0 2px 4px; letter-spacing: .4px; font-weight: 600; }
+.board { flex: 1; overflow-y: auto; padding: 3px 6px; -webkit-overflow-scrolling: touch; }
+.rowwrap { margin-bottom: 2px; }
+.rowlabel { font-size: 9px; color: var(--dim); margin: 0 2px 1px; letter-spacing: .3px; font-weight: 600; line-height: 1.15; }
 .rowlabel.tappable { color: var(--acc); cursor: pointer; }
 .rowlabel.tappable::after { content: ' · 예약'; font-weight: 400; opacity: .8; }
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.row-special { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: start; }
-.row-special .rowlabel { grid-column: 1 / -1; }
-.row-special .cards { grid-template-columns: 1fr; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
 
 /* ── 카드 ── 실물 카드 구도: 색 리본 → (진화예고) → 흰 아트 → 코인 스택 → 이름 알약 */
 .card {
@@ -183,8 +201,8 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .pip.paid { opacity: .32; text-decoration: line-through; }
 
 /* ── 은행 ──────────────────────────────────────────── */
-.bank { display: flex; justify-content: center; gap: 6px; padding: 8px 6px; background: var(--bg2); border-top: 1px solid var(--line); flex: none; }
-.tok { flex: 1; max-width: 60px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 16px; border: 2px solid #0004; position: relative; }
+.bank { display: flex; justify-content: center; gap: 4px; padding: 2px 6px; background: var(--bg2); border-top: 1px solid var(--line); flex: none; }
+.tok { flex: 1; max-width: 32px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 12px; border: 1.5px solid #0004; position: relative; }
 .tok.pickable { box-shadow: 0 0 0 2px var(--ok); }
 .tok.dead { opacity: .28; }
 .tok .badge { position: absolute; top: -4px; right: -2px; background: var(--acc); color: #241c00; border-radius: 9px; font-size: 10px; padding: 0 5px; font-weight: 800; }
@@ -192,31 +210,32 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .tok.y { background: var(--y); color: #3a2c00; } .tok.p { background: var(--p); color: #5b2340; }
 .tok.k { background: var(--k); color: var(--acc); } .tok.m { background: var(--m); color: #fff; }
 
-/* ── 내 영역 ───────────────────────────────────────── */
-.me { background: var(--panel); border-top: 1px solid var(--line); padding: 7px 8px 4px; flex: none; }
-.me-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; }
-.me-head .score { color: var(--acc); font-size: 19px; }
-.me-tokens, .me-bonus { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; min-height: 20px; align-items: center; }
-.me-bonus .lb, .me-tokens .lb { font-size: 10px; color: var(--dim); width: 30px; }
-.me-hand { display: flex; gap: 5px; margin-top: 5px; }
-.me-hand .card { width: 46px; aspect-ratio: 5/7; }
-.me-hand:empty { display: none; }
-
-/* ── 액션바 ────────────────────────────────────────── */
-.actionbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 8px 10px calc(8px + var(--safe-b)); background: var(--bg2); border-top: 1px solid var(--line); flex: none;
+/* ── 내 영역 — 상태·확정/취소를 한 줄에 압축 ─────────── */
+.me { background: var(--panel); border-top: 1px solid var(--line); padding: 3px 8px calc(3px + var(--safe-b)); flex: none; }
+.me-head { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
+#me-name { flex: none; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-head .score { color: var(--acc); font-size: 15px; flex: none; }
+#status {
+  flex: 1 1 auto; min-width: 0; font-size: 10px; font-weight: 400; color: var(--dim);
+  text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-#status { font-size: 13px; color: var(--dim); flex: 1; }
-.picks { display: flex; gap: 4px; }
+.picks { display: flex; gap: 3px; flex: none; }
 .picks:empty { display: none; }
 .picks .pip { position: relative; }
 .picks .pip::after {
   content: '×'; position: absolute; top: -6px; right: -5px; width: 13px; height: 13px;
   background: #000c; color: #fff; border-radius: 50%; font-size: 10px; line-height: 13px; text-align: center;
 }
-.actionbar .btns { display: flex; gap: 6px; }
-.actionbar button { padding: 10px 16px; font-size: 14px; }
+.me-head .btns { display: flex; gap: 3px; flex: none; }
+.me-head .btns button { padding: 3px 9px; font-size: 11px; border-radius: 7px; line-height: 1.6; }
+#menu { padding: 3px 7px !important; }
+
+.me-mid { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; align-items: center; min-height: 15px; }
+.me-tokens, .me-bonus { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
+.me-bonus .lb, .me-tokens .lb { font-size: 9px; color: var(--dim); width: auto; }
+.me-hand { display: flex; gap: 5px; margin-top: 3px; }
+.me-hand .card { width: 38px; aspect-ratio: 5/7; }
+.me-hand:empty { display: none; }
 
 /* ── 모달 / 토스트 ─────────────────────────────────── */
 .modal { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; padding: 16px; z-index: 50; }
@@ -232,11 +251,11 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .result-row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 10px; background: var(--bg2); margin-bottom: 6px; font-size: 14px; }
 .result-row.win { background: var(--acc); color: #241c00; font-weight: 800; }
 
-.toast { position: fixed; left: 50%; bottom: calc(84px + var(--safe-b)); transform: translateX(-50%); background: #000d; border: 1px solid var(--line); padding: 9px 15px; border-radius: 20px; font-size: 13px; z-index: 60; pointer-events: none; }
+.toast { position: fixed; left: 50%; bottom: calc(64px + var(--safe-b)); transform: translateX(-50%); background: #000d; border: 1px solid var(--line); padding: 9px 15px; border-radius: 20px; font-size: 13px; z-index: 60; pointer-events: none; }
 
 @media (min-width: 620px) {
   .board { max-width: 620px; margin: 0 auto; width: 100%; }
-  .bank, .me, .actionbar, .rivalbar { max-width: 620px; margin-left: auto; margin-right: auto; width: 100%; }
+  .bank, .me, .rivalbar { max-width: 620px; margin-left: auto; margin-right: auto; width: 100%; }
 }
 
 </style>
@@ -246,7 +265,14 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 <!-- ── 로비 ─────────────────────────────────────────── -->
 <section id="lobby" class="screen">
   <header class="lobby-head">
-    <h1>포켓몬<br><span>스플렌더</span></h1>
+    <div class="hero">
+      <h1>포켓몬<br><span>스플렌더</span></h1>
+      <div class="hero-art">
+        <img class="hero-mon m1" src="assets/sprites/7.png" alt="꼬부기">
+        <img class="hero-mon m2" src="assets/sprites/1.png" alt="이상해씨">
+        <img class="hero-mon m3" src="assets/sprites/4.png" alt="파이리">
+      </div>
+    </div>
     <p class="sub">18점을 먼저 찍고 최고의 트레이너가 되자</p>
   </header>
 
@@ -281,11 +307,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   <div id="rivalbar" class="rivalbar"></div>
 
   <div id="board" class="board">
-    <div class="row-special">
-      <div class="rowlabel">전설·환상 / 희귀</div>
-      <div class="cards" id="row-L"></div>
-      <div class="cards" id="row-R"></div>
-    </div>
+    <div class="rowwrap"><div class="rowlabel">전설·환상 · 희귀</div><div class="cards" id="row-special"></div></div>
     <div class="rowwrap"><div class="rowlabel" id="label-3">3단계</div><div class="cards" id="row-3"></div></div>
     <div class="rowwrap"><div class="rowlabel" id="label-2">2단계</div><div class="cards" id="row-2"></div></div>
     <div class="rowwrap"><div class="rowlabel" id="label-1">1단계</div><div class="cards" id="row-1"></div></div>
@@ -297,20 +319,19 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
     <div class="me-head">
       <span id="me-name">나</span>
       <span id="me-score" class="score">0</span>
+      <div id="picks" class="picks"></div>
+      <span id="status">당신의 차례</span>
+      <div class="btns">
+        <button id="cancel" class="ghost" disabled>취소</button>
+        <button id="confirm" class="primary" disabled>확정</button>
+        <button id="menu" class="ghost">≡</button>
+      </div>
     </div>
-    <div id="me-tokens" class="me-tokens"></div>
-    <div id="me-bonus" class="me-bonus"></div>
+    <div class="me-mid">
+      <div id="me-tokens" class="me-tokens"></div>
+      <div id="me-bonus" class="me-bonus"></div>
+    </div>
     <div id="me-hand" class="me-hand"></div>
-  </div>
-
-  <div id="actionbar" class="actionbar">
-    <div id="picks" class="picks"></div>
-    <span id="status">당신의 차례</span>
-    <div class="btns">
-      <button id="confirm" class="primary" disabled>확정</button>
-      <button id="cancel" class="ghost" disabled>취소</button>
-      <button id="menu" class="ghost">≡</button>
-    </div>
   </div>
 </section>
 
@@ -1288,36 +1309,38 @@ function render() {
   const me = G.players[ME];
   const myTurn = G.turn === ME && !G.over;
 
-  // 상대 바
+  // 상대 바 — 한 줄에 이름·점수·레벨·카드/진화 수를 압축해서 표시
   const rb = $('#rivalbar');
   rb.innerHTML = '';
   for (const p of G.players) {
     const d = el('div', 'rv' + (G.turn === p.id ? ' active' : ''));
     const bon = bonuses(p);
     d.innerHTML =
-      `<div class="top"><span>${p.name}</span><b>${score(p)}</b></div>` +
-      `<div class="lvl">${p.kind === 'ai' ? LEVEL_NAMES[p.level] : '플레이어'} · 카드 ${p.board.length} · 진화 ${p.buried.length}</div>` +
-      `<div class="chips">${COLORS.filter((c) => bon[c]).map((c) => pip(c, bon[c], 'sm')).join('')}` +
-      `${p.tokens.m ? pip('m', p.tokens.m, 'sm') : ''}</div>`;
+      `<div class="top"><span>${p.name}</span><b>${score(p)}</b>` +
+      `<i>${p.kind === 'ai' ? LEVEL_NAMES[p.level] : '나'}·${p.board.length}·${p.buried.length}▲</i>` +
+      `<span class="chips">${COLORS.filter((c) => bon[c]).map((c) => pip(c, bon[c], 'sm')).join('')}` +
+      `${p.tokens.m ? pip('m', p.tokens.m, 'sm') : ''}</span></div>`;
     rb.appendChild(d);
   }
 
-  // 시장
-  for (const t of ['L', 'R', 3, 2, 1]) {
+  // 시장 — 전설·환상·희귀는 한 줄로 합쳐 다른 단계와 같은 카드 크기로 표시
+  const spec = $('#row-special');
+  spec.innerHTML = '';
+  for (const c of [...G.market.L, ...G.market.R]) spec.appendChild(cardNode(c, { interactive: myTurn }));
+
+  for (const t of [3, 2, 1]) {
     const row = $('#row-' + t);
     row.innerHTML = '';
     const slots = G.market[t];
     for (const c of slots) row.appendChild(cardNode(c, { interactive: myTurn }));
     if (!slots.length) row.appendChild(el('div', 'card empty'));
 
-    if (typeof t === 'number') {
-      const label = $('#label-' + t);
-      const left = G.decks[t].length;
-      const canBlindReserve = myTurn && left > 0 && me.hand.length < HAND_LIMIT;
-      label.textContent = `${t}단계 (덱${left})`;
-      label.classList.toggle('tappable', canBlindReserve);
-      label.onclick = canBlindReserve ? () => reserveFromDeck(t) : null;
-    }
+    const label = $('#label-' + t);
+    const left = G.decks[t].length;
+    const canBlindReserve = myTurn && left > 0 && me.hand.length < HAND_LIMIT;
+    label.textContent = `${t}단계 (덱${left})`;
+    label.classList.toggle('tappable', canBlindReserve);
+    label.onclick = canBlindReserve ? () => reserveFromDeck(t) : null;
   }
 
   // 은행
