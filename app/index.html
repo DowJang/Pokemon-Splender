@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#151a24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>포켓몬 스플렌더</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/sprites/1.png">
+<link rel="apple-touch-icon" href="assets/sprites/1.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── 로비 ─────────────────────────────────────────── -->
+<section id="lobby" class="screen">
+  <header class="lobby-head">
+    <div class="hero">
+      <h1>포켓몬<br><span>스플렌더</span></h1>
+      <div class="hero-art">
+        <img class="hero-mon m1" src="assets/sprites/7.png" alt="꼬부기">
+        <img class="hero-mon m2" src="assets/sprites/1.png" alt="이상해씨">
+        <img class="hero-mon m3" src="assets/sprites/4.png" alt="파이리">
+      </div>
+    </div>
+    <p class="sub">18점을 먼저 찍고 최고의 트레이너가 되자</p>
+  </header>
+
+  <div class="panel">
+    <h2>1:1 상대 난이도</h2>
+    <div id="rivals" class="rivals"></div>
+    <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 순으로 강해집니다.</p>
+  </div>
+
+  <div class="panel">
+    <h2>내 이름</h2>
+    <input id="myname" type="text" value="나" maxlength="8" autocomplete="off">
+  </div>
+
+  <button id="start" class="primary big">게임 시작</button>
+  <button id="how" class="ghost">규칙 보기</button>
+  <p class="foot">개인용 · 비상업 · 오프라인 실행</p>
+</section>
+
+<!-- ── 게임 ─────────────────────────────────────────── -->
+<section id="game" class="screen hidden">
+  <section id="rivalbar" class="player-dock rivalbar" aria-label="상대 카드 현황">
+    <div id="rival-summary" class="dock-summary"></div>
+    <div class="collection-row">
+      <div class="collection-group owned-group">
+        <div class="collection-title">획득 <b id="rival-owned-count">0</b></div>
+        <div id="rival-owned" class="collection-strip"></div>
+      </div>
+      <div class="collection-group kept-group">
+        <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="rival-kept-count">0</b></div>
+        <div id="rival-kept" class="collection-strip kept-strip"></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="playfield">
+    <div id="board" class="board">
+      <div class="rowwrap"><div class="rowlabel">전설·환상 · 희귀</div><div class="cards" id="row-special"></div></div>
+      <div class="rowwrap"><div class="rowlabel" id="label-3">3단계</div><div class="cards" id="row-3"></div></div>
+      <div class="rowwrap"><div class="rowlabel" id="label-2">2단계</div><div class="cards" id="row-2"></div></div>
+      <div class="rowwrap"><div class="rowlabel" id="label-1">1단계</div><div class="cards" id="row-1"></div></div>
+    </div>
+    <div id="bank" class="bank"></div>
+  </main>
+
+  <section id="me" class="player-dock me" aria-label="내 카드 현황">
+    <div class="me-head">
+      <span id="me-name">나</span>
+      <span id="me-score" class="score">0</span>
+      <div id="picks" class="picks"></div>
+      <span id="status">당신의 차례</span>
+      <div class="btns">
+        <button id="cancel" class="ghost" disabled>취소</button>
+        <button id="confirm" class="primary" disabled>확정</button>
+        <button id="menu" class="ghost">≡</button>
+      </div>
+    </div>
+    <div class="me-mid">
+      <div id="me-tokens" class="me-tokens"></div>
+      <div id="me-bonus" class="me-bonus"></div>
+    </div>
+    <div class="collection-row">
+      <div class="collection-group owned-group">
+        <div class="collection-title">획득 <b id="me-owned-count">0</b></div>
+        <div id="me-owned" class="collection-strip"></div>
+      </div>
+      <div class="collection-group kept-group">
+        <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="me-kept-count">0</b></div>
+        <div id="me-kept" class="collection-strip kept-strip"></div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<div id="modal" class="modal hidden"><div class="modal-in" id="modal-in"></div></div>
+<div id="toast" class="toast hidden"></div>
+<div id="action-popup" class="action-popup hidden" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

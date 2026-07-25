@@ -1,0 +1,15 @@
+{
+  "name": "포켓몬 스플렌더",
+  "short_name": "포켓스플",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#131722",
+  "theme_color": "#151a24",
+  "lang": "ko",
+  "icons": [
+    { "src": "assets/sprites/1.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "assets/sprites/1.png", "sizes": "256x256", "type": "image/png", "purpose": "maskable" }
+  ]
+}
