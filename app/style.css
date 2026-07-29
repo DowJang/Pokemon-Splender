@@ -73,6 +73,19 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rival .seg button { font-size: 13px; padding: 9px 0; }
 .rival .seg button:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
 
+.stats-panel { padding-bottom: 12px; }
+.stats-grid { display: grid; gap: 7px; }
+.stats-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 40px; padding: 9px 11px; border-radius: 10px;
+  background: var(--bg2); border: 1px solid var(--line);
+}
+.stats-row > span { color: var(--dim); font-size: 12px; font-weight: 700; flex: none; }
+.stats-row strong { text-align: right; font-size: 14px; letter-spacing: -.2px; }
+.stats-row strong em { color: var(--acc); font-size: 12px; font-style: normal; white-space: nowrap; }
+.stats-row.total { border-color: #ffcb3d55; background: linear-gradient(135deg, var(--bg2), #ffcb3d0d); }
+.stats-note { margin: 7px 1px 0; color: #6f7b94; font-size: 10px; text-align: right; }
+
 #myname {
   width: 100%; padding: 11px 12px; border-radius: 10px; background: var(--bg2);
   border: 1px solid var(--line); color: var(--ink); font-size: 15px;
@@ -351,6 +364,14 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .modal-in .evochoice .arrow { color: var(--acc); font-weight: 800; }
 .result-row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 10px; background: var(--bg2); margin-bottom: 6px; font-size: 14px; }
 .result-row.win { background: var(--acc); color: #241c00; font-weight: 800; }
+.result-stats {
+  display: grid; gap: 5px; margin-top: 12px; padding: 10px 12px;
+  border-radius: 10px; background: var(--bg2); border: 1px solid var(--line);
+  color: var(--dim); font-size: 12px;
+}
+.result-stats span { display: flex; justify-content: space-between; gap: 10px; }
+.result-stats b { color: var(--ink); }
+.result-stats em { color: var(--acc); font-style: normal; }
 
 .toast { position: fixed; left: 50%; bottom: calc(130px + var(--safe-b)); transform: translateX(-50%); background: #000d; border: 1px solid var(--line); padding: 9px 15px; border-radius: 20px; font-size: 13px; z-index: 60; pointer-events: none; }
 .action-popup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #111a2df2; border: 1px solid var(--acc); box-shadow: 0 10px 35px #0009; padding: 14px 22px; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; z-index: 70; pointer-events: none; white-space: nowrap; }

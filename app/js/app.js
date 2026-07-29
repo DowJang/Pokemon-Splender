@@ -19,9 +19,77 @@ let G = null;              // 게임 상태
 let ME = 0;                // 내 플레이어 인덱스
 let pick = [];             // 선택한 토큰 색
 let busy = false;
+let statsRecorded = false;
 
 // ── 로비 ──────────────────────────────────────────────────────
 let rivalLevel = 'adept';
+const STATS_KEY = 'poke-splendor-stats-v1';
+let statsCache = null;
+
+const emptyStats = () => ({ all: { games: 0, wins: 0, losses: 0 }, days: {} });
+
+function cleanRecord(value) {
+  const wins = Math.max(0, Math.floor(Number(value?.wins) || 0));
+  const losses = Math.max(0, Math.floor(Number(value?.losses) || 0));
+  return { games: wins + losses, wins, losses };
+}
+
+function todayKey() {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function loadStats() {
+  if (statsCache) return statsCache;
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(STATS_KEY) || 'null'); } catch (_) { /* 저장소 차단·손상 시 새 기록 */ }
+  const stats = emptyStats();
+  stats.all = cleanRecord(raw?.all);
+  if (raw?.days && typeof raw.days === 'object') {
+    for (const [day, value] of Object.entries(raw.days)) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(day)) stats.days[day] = cleanRecord(value);
+    }
+  }
+  statsCache = stats;
+  return stats;
+}
+
+function saveStats(stats) {
+  statsCache = stats;
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (_) { /* 현재 실행 중에는 메모리에 유지 */ }
+}
+
+function statsText(record) {
+  const rate = record.games ? record.wins / record.games * 100 : 0;
+  return `${record.games}전 ${record.wins}승 ${record.losses}패 <em>(승률 ${rate.toFixed(1)}%)</em>`;
+}
+
+function renderStats() {
+  const stats = loadStats();
+  const today = stats.days[todayKey()] || cleanRecord(null);
+  $('#stats-today').innerHTML = statsText(today);
+  $('#stats-all').innerHTML = statsText(stats.all);
+}
+
+function recordGameResult() {
+  if (statsRecorded || !G?.over) return null;
+  const stats = loadStats();
+  const day = todayKey();
+  const today = stats.days[day] || cleanRecord(null);
+  const won = G.winner === G.players[ME].id;
+
+  for (const record of [stats.all, today]) {
+    record.games++;
+    if (won) record.wins++;
+    else record.losses++;
+  }
+  stats.days[day] = today;
+  statsRecorded = true;
+  saveStats(stats);
+  renderStats();
+  return { today, all: stats.all };
+}
 
 function renderRivals() {
   const box = $('#rivals');
@@ -39,6 +107,7 @@ function renderRivals() {
 }
 
 renderRivals();
+renderStats();
 
 $('#start').onclick = () => {
   const name = ($('#myname').value || '나').trim().slice(0, 8);
@@ -48,6 +117,7 @@ $('#start').onclick = () => {
   ];
   ME = 0;
   G = newGame({ players });
+  statsRecorded = false;
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   render();
@@ -487,12 +557,20 @@ function showAction(msg) {
 function showResult() {
   const box = el('div');
   box.innerHTML = `<h3>게임 종료</h3>`;
+  const resultStats = recordGameResult();
   const ranked = G.ranking.map((id) => G.players.find((p) => p.id === id));
   ranked.forEach((p, i) => {
     const row = el('div', 'result-row' + (i === 0 ? ' win' : ''));
     row.innerHTML = `<span>${i + 1}위 · ${p.name}</span><span>${score(p)}점 · 진화 ${p.buried.length} · 카드 ${p.board.length}</span>`;
     box.appendChild(row);
   });
+  if (resultStats) {
+    const summary = el('div', 'result-stats');
+    summary.innerHTML =
+      `<span><b>오늘</b> ${statsText(resultStats.today)}</span>` +
+      `<span><b>누적</b> ${statsText(resultStats.all)}</span>`;
+    box.appendChild(summary);
+  }
   const again = el('button', 'primary big', '다시 하기');
   again.style.marginTop = '12px';
   again.onclick = () => location.reload();

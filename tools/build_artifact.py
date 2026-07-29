@@ -91,7 +91,7 @@ def main():
     html = re.sub(r'\s*<link rel="stylesheet" href="style\.css">\n?', '\n', html)
     html = re.sub(
         r'<script type="module" src="js/app\.js"></script>',
-        f'<script>\n{script}\n</script>',
+        lambda _: f'<script>\n{script}\n</script>',
         html,
     )
     html = inline_image_sources(html)
