@@ -83,6 +83,19 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rival .seg button { font-size: 13px; padding: 9px 0; }
 .rival .seg button:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
 
+.stats-panel { padding-bottom: 12px; }
+.stats-grid { display: grid; gap: 7px; }
+.stats-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 40px; padding: 9px 11px; border-radius: 10px;
+  background: var(--bg2); border: 1px solid var(--line);
+}
+.stats-row > span { color: var(--dim); font-size: 12px; font-weight: 700; flex: none; }
+.stats-row strong { text-align: right; font-size: 14px; letter-spacing: -.2px; }
+.stats-row strong em { color: var(--acc); font-size: 12px; font-style: normal; white-space: nowrap; }
+.stats-row.total { border-color: #ffcb3d55; background: linear-gradient(135deg, var(--bg2), #ffcb3d0d); }
+.stats-note { margin: 7px 1px 0; color: #6f7b94; font-size: 10px; text-align: right; }
+
 #myname {
   width: 100%; padding: 11px 12px; border-radius: 10px; background: var(--bg2);
   border: 1px solid var(--line); color: var(--ink); font-size: 15px;
@@ -361,6 +374,14 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .modal-in .evochoice .arrow { color: var(--acc); font-weight: 800; }
 .result-row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 10px; background: var(--bg2); margin-bottom: 6px; font-size: 14px; }
 .result-row.win { background: var(--acc); color: #241c00; font-weight: 800; }
+.result-stats {
+  display: grid; gap: 5px; margin-top: 12px; padding: 10px 12px;
+  border-radius: 10px; background: var(--bg2); border: 1px solid var(--line);
+  color: var(--dim); font-size: 12px;
+}
+.result-stats span { display: flex; justify-content: space-between; gap: 10px; }
+.result-stats b { color: var(--ink); }
+.result-stats em { color: var(--acc); font-style: normal; }
 
 .toast { position: fixed; left: 50%; bottom: calc(130px + var(--safe-b)); transform: translateX(-50%); background: #000d; border: 1px solid var(--line); padding: 9px 15px; border-radius: 20px; font-size: 13px; z-index: 60; pointer-events: none; }
 .action-popup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #111a2df2; border: 1px solid var(--acc); box-shadow: 0 10px 35px #0009; padding: 14px 22px; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; z-index: 70; pointer-events: none; white-space: nowrap; }
@@ -406,6 +427,21 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
     <h2>1:1 상대 난이도</h2>
     <div id="rivals" class="rivals"></div>
     <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 → 화성신 → 우주신 순으로 강해집니다.</p>
+  </div>
+
+  <div class="panel stats-panel" aria-labelledby="stats-title">
+    <h2 id="stats-title">나의 승률</h2>
+    <div class="stats-grid">
+      <div class="stats-row">
+        <span>오늘</span>
+        <strong id="stats-today">0전 0승 0패 <em>(승률 0.0%)</em></strong>
+      </div>
+      <div class="stats-row total">
+        <span>누적</span>
+        <strong id="stats-all">0전 0승 0패 <em>(승률 0.0%)</em></strong>
+      </div>
+    </div>
+    <p class="stats-note">이 기기의 브라우저에 자동 저장됩니다.</p>
   </div>
 
   <div class="panel">
@@ -1501,9 +1537,77 @@ let G = null;              // 게임 상태
 let ME = 0;                // 내 플레이어 인덱스
 let pick = [];             // 선택한 토큰 색
 let busy = false;
+let statsRecorded = false;
 
 // ── 로비 ──────────────────────────────────────────────────────
 let rivalLevel = 'adept';
+const STATS_KEY = 'poke-splendor-stats-v1';
+let statsCache = null;
+
+const emptyStats = () => ({ all: { games: 0, wins: 0, losses: 0 }, days: {} });
+
+function cleanRecord(value) {
+  const wins = Math.max(0, Math.floor(Number(value?.wins) || 0));
+  const losses = Math.max(0, Math.floor(Number(value?.losses) || 0));
+  return { games: wins + losses, wins, losses };
+}
+
+function todayKey() {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function loadStats() {
+  if (statsCache) return statsCache;
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(STATS_KEY) || 'null'); } catch (_) { /* 저장소 차단·손상 시 새 기록 */ }
+  const stats = emptyStats();
+  stats.all = cleanRecord(raw?.all);
+  if (raw?.days && typeof raw.days === 'object') {
+    for (const [day, value] of Object.entries(raw.days)) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(day)) stats.days[day] = cleanRecord(value);
+    }
+  }
+  statsCache = stats;
+  return stats;
+}
+
+function saveStats(stats) {
+  statsCache = stats;
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (_) { /* 현재 실행 중에는 메모리에 유지 */ }
+}
+
+function statsText(record) {
+  const rate = record.games ? record.wins / record.games * 100 : 0;
+  return `${record.games}전 ${record.wins}승 ${record.losses}패 <em>(승률 ${rate.toFixed(1)}%)</em>`;
+}
+
+function renderStats() {
+  const stats = loadStats();
+  const today = stats.days[todayKey()] || cleanRecord(null);
+  $('#stats-today').innerHTML = statsText(today);
+  $('#stats-all').innerHTML = statsText(stats.all);
+}
+
+function recordGameResult() {
+  if (statsRecorded || !G?.over) return null;
+  const stats = loadStats();
+  const day = todayKey();
+  const today = stats.days[day] || cleanRecord(null);
+  const won = G.winner === G.players[ME].id;
+
+  for (const record of [stats.all, today]) {
+    record.games++;
+    if (won) record.wins++;
+    else record.losses++;
+  }
+  stats.days[day] = today;
+  statsRecorded = true;
+  saveStats(stats);
+  renderStats();
+  return { today, all: stats.all };
+}
 
 function renderRivals() {
   const box = $('#rivals');
@@ -1521,6 +1625,7 @@ function renderRivals() {
 }
 
 renderRivals();
+renderStats();
 
 $('#start').onclick = () => {
   const name = ($('#myname').value || '나').trim().slice(0, 8);
@@ -1530,6 +1635,7 @@ $('#start').onclick = () => {
   ];
   ME = 0;
   G = newGame({ players });
+  statsRecorded = false;
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   render();
@@ -1969,12 +2075,20 @@ function showAction(msg) {
 function showResult() {
   const box = el('div');
   box.innerHTML = `<h3>게임 종료</h3>`;
+  const resultStats = recordGameResult();
   const ranked = G.ranking.map((id) => G.players.find((p) => p.id === id));
   ranked.forEach((p, i) => {
     const row = el('div', 'result-row' + (i === 0 ? ' win' : ''));
     row.innerHTML = `<span>${i + 1}위 · ${p.name}</span><span>${score(p)}점 · 진화 ${p.buried.length} · 카드 ${p.board.length}</span>`;
     box.appendChild(row);
   });
+  if (resultStats) {
+    const summary = el('div', 'result-stats');
+    summary.innerHTML =
+      `<span><b>오늘</b> ${statsText(resultStats.today)}</span>` +
+      `<span><b>누적</b> ${statsText(resultStats.all)}</span>`;
+    box.appendChild(summary);
+  }
   const again = el('button', 'primary big', '다시 하기');
   again.style.marginTop = '12px';
   again.onclick = () => location.reload();
