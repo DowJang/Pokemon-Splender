@@ -1,4 +1,4 @@
-// 최고 난이도 튜닝: 장프로 < 김마귀 < 나일롱머스크 서열과 응답 시간을 비교한다.
+// 최고 난이도 튜닝: 장프로 < 김마귀 < 나일롱머스크 < 화성신 < 우주신을 비교한다.
 //   node tools/tune_hard.mjs [자리당 판수]
 import { performance } from 'node:perf_hooks';
 import {
@@ -11,6 +11,8 @@ const N = +(process.argv[2] || 8);
 const SEED_BASE = +(process.env.SEED_BASE || 21000);
 if (process.env.KIM_PATCH) Object.assign(PROFILE.kimmawi, JSON.parse(process.env.KIM_PATCH));
 if (process.env.MUSK_PATCH) Object.assign(PROFILE.nylongmusk, JSON.parse(process.env.MUSK_PATCH));
+if (process.env.MARS_PATCH) Object.assign(PROFILE.marsgod, JSON.parse(process.env.MARS_PATCH));
+if (process.env.SPACE_PATCH) Object.assign(PROFILE.spacegod, JSON.parse(process.env.SPACE_PATCH));
 
 function play(levels, seed) {
   const players = levels.map((lv, i) => newPlayer(i, `${lv}${i}`, 'ai', lv));
@@ -67,7 +69,16 @@ const matchups = process.env.MATCH === 'kim'
   ? [['kimmawi', 'pro']]
   : process.env.MATCH === 'musk'
     ? [['nylongmusk', 'kimmawi']]
-    : [['kimmawi', 'pro'], ['nylongmusk', 'kimmawi']];
+    : process.env.MATCH === 'mars'
+      ? [['marsgod', 'nylongmusk']]
+      : process.env.MATCH === 'space'
+        ? [['spacegod', 'marsgod']]
+        : [
+            ['kimmawi', 'pro'],
+            ['nylongmusk', 'kimmawi'],
+            ['marsgod', 'nylongmusk'],
+            ['spacegod', 'marsgod'],
+          ];
 
 for (const [stronger, weaker] of matchups) {
   const r = duel(stronger, weaker);

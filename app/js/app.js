@@ -402,7 +402,7 @@ async function step() {
   if (G.turn === ME) { render(); return; }
   busy = true;
   render();
-  await sleep(['pro', 'kimmawi', 'nylongmusk'].includes(cur(G).level) ? 260 : 200);
+  await sleep(['pro', 'kimmawi', 'nylongmusk', 'marsgod', 'spacegod'].includes(cur(G).level) ? 260 : 200);
   const p = cur(G);
   const mv = chooseMove(G);
   showAction(`${p.name}: ${describeMove(mv)}`);

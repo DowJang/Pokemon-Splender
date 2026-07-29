@@ -85,6 +85,8 @@ const matchups = [
   ['pro', 'adept'],
   ['kimmawi', 'pro'],
   ['nylongmusk', 'kimmawi'],
+  ['marsgod', 'nylongmusk'],
+  ['spacegod', 'marsgod'],
 ];
 
 function rotate(a, k) { return a.map((_, i) => a[(i + k) % a.length]); }

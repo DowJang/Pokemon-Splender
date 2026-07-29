@@ -30,7 +30,7 @@ export function newPlayer(id, name, kind, level) {
   return {
     id, name,
     kind,            // 'human' | 'ai'
-    level,           // novice / adept / pro / kimmawi / nylongmusk
+    level,           // novice / adept / pro / kimmawi / nylongmusk / marsgod / spacegod
     tokens: zero(),
     board: [],       // 앞에 놓인 카드 (보너스·승점 유효)
     hand: [],        // 손에 든 예약 카드 (최대 3)

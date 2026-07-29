@@ -1,12 +1,15 @@
 // AI — 초보자(novice) / 수련자(adept) / 장프로(pro)
 //      / 김마귀(kimmawi) / 나일롱머스크(nylongmusk)
+//      / 화성신(marsgod) / 우주신(spacegod)
 //
-// 다섯 난이도의 차이는 "무엇을 볼 수 있는가"이다.
+// 일곱 난이도의 차이는 "무엇을 볼 수 있는가"이다.
 //   초보자 : 눈앞의 점수와 토큰만 본다. 보너스의 장기 가치·진화 계획을 못 본다. 가끔 아무거나 집는다.
 //   수련자 : 보너스 가치와 진화 가능성까지 보고, 상대 한 턴을 내다본다.
 //   장프로 : 후보 수마다 자기 턴을 여러 번 굴려 "18점까지 몇 턴"을 직접 재고 최단 경로를 고른다.
 //   김마귀 : 자기 레이스뿐 아니라 상대의 최선 응수까지 읽고 방해 수를 함께 고른다.
 //   나일롱머스크 : 더 넓은 후보와 장기 맞대결 롤아웃으로 김마귀의 후속 계획까지 읽는다.
+//   화성신 : 시장의 거의 모든 유력 수를 대상으로 더 긴 대국을 예측한다.
+//   우주신 : 가장 넓은 후보와 가장 긴 대국 예측으로 화성신의 장기 계획까지 읽는다.
 import { COLORS, WIN_SCORE } from './data.js';
 import {
   clone, cur, bonuses, score, tokenCount, canAfford,
@@ -46,6 +49,22 @@ const PROFILE = {
     lookahead: 0, rollout: 10, pace: 8, blunder: 0, noise: 0,
     searchDepth: 2, rootBeam: 20, searchBeam: 12, opponentWeight: 0.20, searchPace: 1.5,
     versusRollout: 16, versusWeight: 0.90,
+  },
+  // 화성신 = 나일롱머스크보다 넓은 후보를 24수 맞대결로 검증한다.
+  marsgod: {
+    vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
+    rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
+    lookahead: 0, rollout: 12, pace: 8.5, blunder: 0, noise: 0,
+    searchDepth: 2, rootBeam: 26, searchBeam: 14, opponentWeight: 0.22, searchPace: 1.55,
+    versusRollout: 24, versusWeight: 0.92,
+  },
+  // 우주신 = 가장 넓은 후보를 40수 맞대결로 검증하는 진짜 최고 난이도.
+  spacegod: {
+    vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
+    rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
+    lookahead: 0, rollout: 16, pace: 9.5, blunder: 0, noise: 0,
+    searchDepth: 2, rootBeam: 36, searchBeam: 18, opponentWeight: 0.18, searchPace: 1.7,
+    versusRollout: 40, versusWeight: 0.90,
   },
 };
 
@@ -403,5 +422,7 @@ export const LEVEL_NAMES = {
   pro: '장프로',
   kimmawi: '김마귀',
   nylongmusk: '나일롱머스크',
+  marsgod: '화성신',
+  spacegod: '우주신',
 };
 export { canAfford };

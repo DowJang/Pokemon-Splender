@@ -1,7 +1,7 @@
 // 오프라인 캐시
 //  · 코드/문서(html·css·js·manifest) → 네트워크 우선, 실패하면 캐시 (업데이트가 바로 반영된다)
 //  · 스프라이트 이미지            → 캐시 우선 (한 번 받으면 다시 안 받는다)
-const CACHE = 'poke-splendor-v5';
+const CACHE = 'poke-splendor-v6';
 const CORE = [
   './', './index.html', './style.css', './manifest.webmanifest',
   './js/app.js', './js/engine.js', './js/ai.js', './js/data.js',

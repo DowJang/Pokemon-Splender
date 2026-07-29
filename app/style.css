@@ -71,6 +71,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rival .nm { width: 66px; font-size: 13px; color: var(--dim); flex: none; }
 .rival .seg { flex: 1; grid-template-columns: repeat(3, 1fr); }
 .rival .seg button { font-size: 13px; padding: 9px 0; }
+.rival .seg button:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
 
 #myname {
   width: 100%; padding: 11px 12px; border-radius: 10px; background: var(--bg2);

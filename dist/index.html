@@ -81,6 +81,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rival .nm { width: 66px; font-size: 13px; color: var(--dim); flex: none; }
 .rival .seg { flex: 1; grid-template-columns: repeat(3, 1fr); }
 .rival .seg button { font-size: 13px; padding: 9px 0; }
+.rival .seg button:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
 
 #myname {
   width: 100%; padding: 11px 12px; border-radius: 10px; background: var(--bg2);
@@ -362,6 +363,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .result-row.win { background: var(--acc); color: #241c00; font-weight: 800; }
 
 .toast { position: fixed; left: 50%; bottom: calc(130px + var(--safe-b)); transform: translateX(-50%); background: #000d; border: 1px solid var(--line); padding: 9px 15px; border-radius: 20px; font-size: 13px; z-index: 60; pointer-events: none; }
+.action-popup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #111a2df2; border: 1px solid var(--acc); box-shadow: 0 10px 35px #0009; padding: 14px 22px; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; z-index: 70; pointer-events: none; white-space: nowrap; }
 
 @media (min-width: 620px) {
   .cards { gap: 7px; }
@@ -403,7 +405,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   <div class="panel">
     <h2>1:1 상대 난이도</h2>
     <div id="rivals" class="rivals"></div>
-    <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 순으로 강해집니다.</p>
+    <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 → 화성신 → 우주신 순으로 강해집니다.</p>
   </div>
 
   <div class="panel">
@@ -473,6 +475,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 <div id="modal" class="modal hidden"><div class="modal-in" id="modal-in"></div></div>
 <div id="toast" class="toast hidden"></div>
+<div id="action-popup" class="action-popup hidden" aria-live="polite"></div>
 
 <script>
 "use strict";
@@ -753,7 +756,7 @@ function newPlayer(id, name, kind, level) {
   return {
     id, name,
     kind,            // 'human' | 'ai'
-    level,           // novice / adept / pro / kimmawi / nylongmusk
+    level,           // novice / adept / pro / kimmawi / nylongmusk / marsgod / spacegod
     tokens: zero(),
     board: [],       // 앞에 놓인 카드 (보너스·승점 유효)
     hand: [],        // 손에 든 예약 카드 (최대 3)
@@ -884,7 +887,9 @@ function legalMoves(g) {
 
   // 1) 서로 다른 색 3개 (남은 색이 3개 미만이면 있는 만큼)
   const avail = COLORS.filter((c) => g.bank[c] > 0);
-  const take = Math.min(3, avail.length);
+  // 차례 종료 시 토큰을 자동 반납하지 않도록, 현재 보유량을 넘지 않는
+  // 선택지만 만든다. (예: 8개 보유 시에는 2개만 가져올 수 있음)
+  const take = Math.min(3, avail.length, TOKEN_LIMIT - held);
   if (take > 0) {
     for (const set of combos(avail, take)) {
       moves.push({ type: 'take3', colors: set });
@@ -892,7 +897,9 @@ function legalMoves(g) {
   }
   // 2) 같은 색 2개 (해당 색이 4개 이상 남아 있을 때)
   for (const c of COLORS) {
-    if (g.bank[c] >= 4) moves.push({ type: 'take2', color: c });
+    if (g.bank[c] >= 4 && held + 2 <= TOKEN_LIMIT) {
+      moves.push({ type: 'take2', color: c });
+    }
   }
   // 3) 예약 + 마스터볼 1개 (희귀/전설은 예약 불가)
   if (p.hand.length < HAND_LIMIT) {
@@ -1061,13 +1068,16 @@ function finish(g) {
 
 // AI — 초보자(novice) / 수련자(adept) / 장프로(pro)
 //      / 김마귀(kimmawi) / 나일롱머스크(nylongmusk)
+//      / 화성신(marsgod) / 우주신(spacegod)
 //
-// 다섯 난이도의 차이는 "무엇을 볼 수 있는가"이다.
+// 일곱 난이도의 차이는 "무엇을 볼 수 있는가"이다.
 //   초보자 : 눈앞의 점수와 토큰만 본다. 보너스의 장기 가치·진화 계획을 못 본다. 가끔 아무거나 집는다.
 //   수련자 : 보너스 가치와 진화 가능성까지 보고, 상대 한 턴을 내다본다.
 //   장프로 : 후보 수마다 자기 턴을 여러 번 굴려 "18점까지 몇 턴"을 직접 재고 최단 경로를 고른다.
 //   김마귀 : 자기 레이스뿐 아니라 상대의 최선 응수까지 읽고 방해 수를 함께 고른다.
 //   나일롱머스크 : 더 넓은 후보와 장기 맞대결 롤아웃으로 김마귀의 후속 계획까지 읽는다.
+//   화성신 : 시장의 거의 모든 유력 수를 대상으로 더 긴 대국을 예측한다.
+//   우주신 : 가장 넓은 후보와 가장 긴 대국 예측으로 화성신의 장기 계획까지 읽는다.
 // ── 난이도 프로파일 ───────────────────────────────────────────
 const PROFILE = {
   novice: {
@@ -1101,6 +1111,22 @@ const PROFILE = {
     lookahead: 0, rollout: 10, pace: 8, blunder: 0, noise: 0,
     searchDepth: 2, rootBeam: 20, searchBeam: 12, opponentWeight: 0.20, searchPace: 1.5,
     versusRollout: 16, versusWeight: 0.90,
+  },
+  // 화성신 = 나일롱머스크보다 넓은 후보를 24수 맞대결로 검증한다.
+  marsgod: {
+    vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
+    rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
+    lookahead: 0, rollout: 12, pace: 8.5, blunder: 0, noise: 0,
+    searchDepth: 2, rootBeam: 26, searchBeam: 14, opponentWeight: 0.22, searchPace: 1.55,
+    versusRollout: 24, versusWeight: 0.92,
+  },
+  // 우주신 = 가장 넓은 후보를 40수 맞대결로 검증하는 진짜 최고 난이도.
+  spacegod: {
+    vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
+    rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
+    lookahead: 0, rollout: 16, pace: 9.5, blunder: 0, noise: 0,
+    searchDepth: 2, rootBeam: 36, searchBeam: 18, opponentWeight: 0.18, searchPace: 1.7,
+    versusRollout: 40, versusWeight: 0.90,
   },
 };
 
@@ -1458,6 +1484,8 @@ const LEVEL_NAMES = {
   pro: '장프로',
   kimmawi: '김마귀',
   nylongmusk: '나일롱머스크',
+  marsgod: '화성신',
+  spacegod: '우주신',
 };
 
 // UI 컨트롤러
@@ -1627,8 +1655,8 @@ function render() {
     `<span class="turn-flag">${G.turn === rival.id && !G.over ? '상대 차례' : ''}</span>`;
   $('#rival-owned-count').textContent = rival.board.length;
   $('#rival-kept-count').textContent = rival.hand.length;
-  renderCollection('#rival-owned', rival.board);
-  renderCollection('#rival-kept', rival.hand, { kept: true });
+  renderCollection('#rival-owned', rival.board, { showEvolution: true });
+  renderCollection('#rival-kept', rival.hand, { kept: true, showEvolution: true });
 
   // 시장 — 전설·환상·희귀는 한 줄로 합쳐 다른 단계와 같은 카드 크기로 표시
   const spec = $('#row-special');
@@ -1680,7 +1708,7 @@ function render() {
   $('#me-owned-count').textContent = me.board.length;
   $('#me-kept-count').textContent = me.hand.length;
   renderCollection('#me-owned', me.board, { showEvolution: true });
-  renderCollection('#me-kept', me.hand, { interactive: myTurn, kept: true });
+  renderCollection('#me-kept', me.hand, { interactive: myTurn, kept: true, showEvolution: true });
 
   // 액션바 — 고른 토큰은 눌러서 뺄 수 있다
   const pk = $('#picks');
@@ -1709,7 +1737,8 @@ function render() {
 function canPick(c) {
   if (!G.bank[c]) return false;
   const same = pick.filter((x) => x === c).length;
-  if (pick.length >= 3) return false;
+  const capacity = TOKEN_LIMIT - tokenCount(G.players[ME]);
+  if (pick.length >= Math.min(3, capacity)) return false;
   if (same === 1 && pick.length === 1) return G.bank[c] >= 4;     // 같은 색 2개 규칙
   if (same >= 1) return false;
   if (pick.length === 2 && pick[0] === pick[1]) return false;
@@ -1806,6 +1835,7 @@ async function doHumanMove(mv) {
   busy = true;
   pick = [];
   applyMove(G, mv);
+  playSound(mv.type === 'take2' || mv.type === 'take3' ? 'coin' : mv.type === 'buy' ? 'card' : 'reserve');
   render();
   await askEvolution(G.players[ME]);
   await finishTurn();
@@ -1830,7 +1860,7 @@ function askEvolution(p) {
         `<img src="${spriteUrl(from.dex)}"><span>${from.label} <small>(${from.vp}점)</small></span>` +
         `<span class="arrow">→</span>` +
         `<img src="${spriteUrl(to.dex)}"><span>${to.label} <small>(${to.vp}점)</small></span>`;
-      b.onclick = () => { applyEvolution(G, e, p); closeModal(); resolve(); };
+      b.onclick = () => { applyEvolution(G, e, p); playSound('evolution'); closeModal(); resolve(); };
       box.appendChild(b);
     }
     const skip = el('button', 'ghost big', '진화하지 않기');
@@ -1854,15 +1884,19 @@ async function step() {
   if (G.turn === ME) { render(); return; }
   busy = true;
   render();
-  await sleep(['pro', 'kimmawi', 'nylongmusk'].includes(cur(G).level) ? 260 : 200);
+  await sleep(['pro', 'kimmawi', 'nylongmusk', 'marsgod', 'spacegod'].includes(cur(G).level) ? 260 : 200);
   const p = cur(G);
   const mv = chooseMove(G);
+  showAction(`${p.name}: ${describeMove(mv)}`);
+  await sleep(1000);
   applyMove(G, mv);
+  playSound(mv.type === 'take2' || mv.type === 'take3' ? 'coin' : mv.type === 'buy' ? 'card' : 'reserve');
   render();
   await sleep(220);
   const evo = chooseEvolution(G);
   if (evo) {
     applyEvolution(G, evo, p);
+    playSound('evolution');
     toast(`${p.name}: 진화!`);
     render();
     await sleep(320);
@@ -1890,6 +1924,46 @@ function toast(msg) {
   t.classList.remove('hidden');
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.add('hidden'), 1400);
+}
+
+function describeMove(mv) {
+  if (mv.type === 'take2') return '코인 2개 가져가기';
+  if (mv.type === 'take3') return `코인 ${mv.colors.length}개 가져가기`;
+  if (mv.type === 'pass') return '패스';
+  const found = mv.id ? findCard(G, mv.id) : null;
+  if (mv.type === 'buy') return `${found?.card?.label || '카드'} 획득`;
+  if (mv.type === 'reserve' || mv.type === 'reserveDeck') return `${found?.card?.label || `${mv.tier}단계 카드`} 찜하기`;
+  return '행동';
+}
+
+let audioCtx = null;
+function playSound(kind) {
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const tones = { coin: [620, 880], card: [220, 330], reserve: [440, 660], evolution: [392, 523, 784] };
+    const now = audioCtx.currentTime;
+    tones[kind].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = kind === 'coin' ? 'sine' : 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, now + i * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + i * 0.09 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.16);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.09); osc.stop(now + i * 0.09 + 0.18);
+    });
+  } catch (_) { /* 사운드를 지원하지 않는 브라우저에서도 게임은 계속 진행 */ }
+}
+
+let actionTimer = null;
+function showAction(msg) {
+  const node = $('#action-popup');
+  node.textContent = msg;
+  node.classList.remove('hidden');
+  clearTimeout(actionTimer);
+  actionTimer = setTimeout(() => node.classList.add('hidden'), 1200);
 }
 
 function showResult() {
