@@ -190,10 +190,10 @@ function cardNode(c, opts = {}) {
 
 /** 고정 현황 패널용 카드. 작은 크기에서도 이름·점수·보너스가 읽히게 단순화한다. */
 function collectionCardNode(c, opts = {}) {
-  const interactive = Boolean(opts.interactive);
+  const actionable = Boolean(opts.interactive);
   const evolution = opts.showEvolution && c.to && c.need;
-  const n = el(interactive ? 'button' : 'div', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}${evolution ? ' has-evo' : ''}`);
-  if (interactive) n.type = 'button';
+  const n = el('button', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}${evolution ? ' has-evo' : ''}`);
+  n.type = 'button';
   const evolutionTitle = evolution
     ? ` · 진화 조건 ${Object.entries(c.need).map(([color, amount]) => `${BALL[color].name} 보너스 ${amount}`).join(', ')}`
     : '';
@@ -209,8 +209,58 @@ function collectionCardNode(c, opts = {}) {
     `<img src="${spriteUrl(c.dex)}" loading="lazy" alt="">` +
     evolutionBadge +
     `<span class="collection-name">${c.label}</span>`;
-  if (interactive) n.onclick = () => onCardTap(c);
+  n.onclick = () => showCardDetail(c, {
+    owner: opts.owner,
+    kept: Boolean(opts.kept),
+    actionable,
+  });
   return n;
+}
+
+/** 손패/획득 카드의 모든 정보를 중앙 팝업으로 크게 보여준다. */
+function showCardDetail(c, opts = {}) {
+  const wrap = el('section', `card-detail fam-${c.color}`);
+  const stageName = c.tier === 'R' ? '희귀' : c.tier === 'L' ? '전설·환상' : `${c.tier}단계`;
+  const costRows = Object.entries(c.cost || {}).filter(([, amount]) => amount).map(([color, amount]) =>
+    `<span class="detail-chip ${color}">${pball(color)}<b>${BALL[color].name}</b><strong>${amount}개</strong></span>`
+  ).join('');
+  const evoRows = c.to && c.need ? Object.entries(c.need).map(([color, amount]) =>
+    `<span class="detail-chip ${color}">${pball(color)}<b>${BALL[color].name} 카드 보너스</b><strong>${amount}개</strong></span>`
+  ).join('') : '';
+
+  wrap.innerHTML = `
+    <button class="detail-close" type="button" aria-label="닫기">×</button>
+    <div class="detail-heading">
+      <span class="detail-kicker">${opts.owner || ''}${opts.kept ? ' · 찜한 카드' : ' · 획득 카드'}</span>
+      <h3>${c.label}</h3>
+      <span class="detail-stage">${stageName}</span>
+    </div>
+    <div class="detail-main">
+      <div class="detail-art"><img src="${spriteUrl(c.dex)}" alt="${c.label}"></div>
+      <div class="detail-stats">
+        <div class="detail-score"><span>카드 점수</span><strong>${c.vp}</strong><em>점</em></div>
+        <div class="detail-bonus"><span>영구 보너스</span><div>${pball(c.color)}<strong>${BALL[c.color].name} × ${c.bonus}</strong></div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>획득 비용</h4>
+      <div class="detail-chips">${costRows || '<span class="detail-none">비용 없음</span>'}</div>
+    </div>
+    <div class="detail-section evolution-detail">
+      <h4>진화 조건</h4>
+      ${c.to && c.need ? `
+        <div class="evolution-route">
+          <span>${c.label}</span><b>→</b><img src="${spriteUrl(DEX[c.to].dex)}" alt=""><strong>${DEX[c.to].label || c.to}</strong>
+        </div>
+        <div class="detail-chips">${evoRows}</div>
+        <p>위 색상의 <b>카드 보너스</b>가 필요합니다. 토큰은 진화 조건에 포함되지 않습니다.</p>`
+        : '<span class="detail-none">더 이상 진화하지 않는 카드입니다.</span>'}
+    </div>
+    ${opts.actionable ? '<button class="primary detail-action" type="button">이 카드로 행동하기</button>' : ''}`;
+  wrap.querySelector('.detail-close').onclick = closeModal;
+  const action = wrap.querySelector('.detail-action');
+  if (action) action.onclick = () => { closeModal(); onCardTap(c); };
+  openModal(wrap);
 }
 
 function renderCollection(selector, cards, opts = {}) {
@@ -243,8 +293,8 @@ function render() {
     `<span class="turn-flag">${G.turn === rival.id && !G.over ? '상대 차례' : ''}</span>`;
   $('#rival-owned-count').textContent = rival.board.length;
   $('#rival-kept-count').textContent = rival.hand.length;
-  renderCollection('#rival-owned', rival.board, { showEvolution: true });
-  renderCollection('#rival-kept', rival.hand, { kept: true, showEvolution: true });
+  renderCollection('#rival-owned', rival.board, { owner: rival.name, showEvolution: true });
+  renderCollection('#rival-kept', rival.hand, { owner: rival.name, kept: true, showEvolution: true });
 
   // 시장 — 전설·환상·희귀는 한 줄로 합쳐 다른 단계와 같은 카드 크기로 표시
   const spec = $('#row-special');
@@ -295,8 +345,8 @@ function render() {
     (COLORS.some((c) => mb[c]) ? COLORS.filter((c) => mb[c]).map((c) => pip(c, mb[c])).join('') : '<span class="lb" style="width:auto">없음</span>');
   $('#me-owned-count').textContent = me.board.length;
   $('#me-kept-count').textContent = me.hand.length;
-  renderCollection('#me-owned', me.board, { showEvolution: true });
-  renderCollection('#me-kept', me.hand, { interactive: myTurn, kept: true, showEvolution: true });
+  renderCollection('#me-owned', me.board, { owner: me.name, showEvolution: true });
+  renderCollection('#me-kept', me.hand, { owner: me.name, interactive: myTurn, kept: true, showEvolution: true });
 
   // 액션바 — 고른 토큰은 눌러서 뺄 수 있다
   const pk = $('#picks');
