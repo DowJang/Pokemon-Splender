@@ -81,6 +81,20 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rival .nm { width: 66px; font-size: 13px; color: var(--dim); flex: none; }
 .rival .seg { flex: 1; grid-template-columns: repeat(3, 1fr); }
 .rival .seg button { font-size: 13px; padding: 9px 0; }
+.rival .seg button:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
+
+.stats-panel { padding-bottom: 12px; }
+.stats-grid { display: grid; gap: 7px; }
+.stats-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 40px; padding: 9px 11px; border-radius: 10px;
+  background: var(--bg2); border: 1px solid var(--line);
+}
+.stats-row > span { color: var(--dim); font-size: 12px; font-weight: 700; flex: none; }
+.stats-row strong { text-align: right; font-size: 14px; letter-spacing: -.2px; }
+.stats-row strong em { color: var(--acc); font-size: 12px; font-style: normal; white-space: nowrap; }
+.stats-row.total { border-color: #ffcb3d55; background: linear-gradient(135deg, var(--bg2), #ffcb3d0d); }
+.stats-note { margin: 7px 1px 0; color: #6f7b94; font-size: 10px; text-align: right; }
 
 #myname {
   width: 100%; padding: 11px 12px; border-radius: 10px; background: var(--bg2);
@@ -358,15 +372,78 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .modal-in .evochoice { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
 .modal-in .evochoice img { width: 34px; height: 34px; object-fit: contain; }
 .modal-in .evochoice .arrow { color: var(--acc); font-weight: 800; }
+
+/* 손패/획득 카드 상세 보기 */
+.modal-in:has(.card-detail) { max-width: 520px; padding: 0; overflow: hidden auto; }
+.card-detail { --family: #78849a; position: relative; padding: 20px; }
+.card-detail.fam-r { --family: var(--r); } .card-detail.fam-b { --family: var(--b); }
+.card-detail.fam-y { --family: var(--y); } .card-detail.fam-p { --family: var(--p); }
+.card-detail.fam-k { --family: var(--k); }
+.detail-close {
+  position: absolute; z-index: 3; top: 10px; right: 10px; width: 34px; height: 34px; padding: 0;
+  border: 1px solid #ffffff35; border-radius: 50%; background: #0c111dcc; color: #fff;
+  font-size: 25px; line-height: 30px;
+}
+.detail-heading { margin: -20px -20px 16px; padding: 18px 56px 15px 20px; background: linear-gradient(135deg, var(--family), #171d2b 90%); }
+.detail-heading .detail-kicker { display: block; min-height: 15px; color: #fffbd0; font-size: 11px; font-weight: 700; }
+.detail-heading h3 { display: inline; margin: 0; color: #fff; font-size: 27px; text-shadow: 0 2px 3px #0008; }
+.detail-stage { margin-left: 8px; padding: 3px 7px; border-radius: 10px; background: #0007; color: #fff; font-size: 11px; vertical-align: 4px; }
+.detail-main { display: grid; grid-template-columns: minmax(120px, 42%) 1fr; gap: 16px; align-items: center; }
+.detail-art { display: grid; place-items: center; min-height: 155px; border-radius: 14px; background: radial-gradient(circle, #fff 0 35%, #dce1eb 72%, #aab3c3); }
+.detail-art img { width: 88%; height: 150px; object-fit: contain; filter: drop-shadow(0 7px 4px #0004); }
+.detail-stats { display: grid; gap: 10px; }
+.detail-score, .detail-bonus { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg2); }
+.detail-score span, .detail-bonus > span { display: block; margin-bottom: 5px; color: var(--dim); font-size: 11px; font-weight: 700; }
+.detail-score strong { color: var(--acc); font-size: 35px; line-height: 1; }
+.detail-score em { margin-left: 3px; color: var(--ink); font-size: 15px; font-style: normal; font-weight: 800; }
+.detail-bonus div { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
+.detail-bonus .pball { width: 25px; height: 25px; flex: none; }
+.detail-section { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line); }
+.detail-section h4 { margin: 0 0 9px; color: #fff; font-size: 13px; }
+.detail-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.detail-chip { display: flex; align-items: center; gap: 6px; padding: 7px 9px; border: 2px solid var(--chip); border-radius: 10px; background: #0e1421; }
+.detail-chip.r { --chip: var(--r); } .detail-chip.b { --chip: var(--b); }
+.detail-chip.y { --chip: var(--y); } .detail-chip.p { --chip: var(--p); }
+.detail-chip.k { --chip: #888; } .detail-chip.m { --chip: var(--m); }
+.detail-chip .pball { width: 20px; height: 20px; flex: none; }
+.detail-chip b { color: #e7ecf7; font-size: 11px; }
+.detail-chip strong { color: var(--acc); font-size: 14px; }
+.evolution-route { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; color: var(--ink); font-size: 13px; }
+.evolution-route b { color: var(--acc); font-size: 19px; }
+.evolution-route img { width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: #edf0f5; }
+.evolution-detail p { margin: 9px 0 0; color: var(--dim); font-size: 11px; }
+.evolution-detail p b { color: #fff; }
+.detail-none { color: var(--dim); font-size: 12px; }
+.detail-action { width: 100%; margin-top: 16px; padding: 11px; }
 .result-row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 10px; background: var(--bg2); margin-bottom: 6px; font-size: 14px; }
 .result-row.win { background: var(--acc); color: #241c00; font-weight: 800; }
+.result-stats {
+  display: grid; gap: 5px; margin-top: 12px; padding: 10px 12px;
+  border-radius: 10px; background: var(--bg2); border: 1px solid var(--line);
+  color: var(--dim); font-size: 12px;
+}
+.result-stats span { display: flex; justify-content: space-between; gap: 10px; }
+.result-stats b { color: var(--ink); }
+.result-stats em { color: var(--acc); font-style: normal; }
 
 .toast { position: fixed; left: 50%; bottom: calc(130px + var(--safe-b)); transform: translateX(-50%); background: #000d; border: 1px solid var(--line); padding: 9px 15px; border-radius: 20px; font-size: 13px; z-index: 60; pointer-events: none; }
+.action-popup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #111a2df2; border: 1px solid var(--acc); box-shadow: 0 10px 35px #0009; padding: 14px 22px; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; z-index: 70; pointer-events: none; white-space: nowrap; }
 
 @media (min-width: 620px) {
   .cards { gap: 7px; }
   .collection-card { flex-basis: 47px; width: 47px; height: 60px; }
   .collection-card img { left: 8px; width: 31px; height: 32px; }
+}
+
+@media (max-width: 420px) {
+  .card-detail { padding: 15px; }
+  .detail-heading { margin: -15px -15px 12px; padding: 15px 52px 12px 15px; }
+  .detail-heading h3 { font-size: 23px; }
+  .detail-main { grid-template-columns: 40% 1fr; gap: 10px; }
+  .detail-art { min-height: 132px; }
+  .detail-art img { height: 126px; }
+  .detail-score, .detail-bonus { padding: 9px; }
+  .detail-chip { padding: 6px 7px; }
 }
 
 @media (max-height: 560px) {
@@ -403,7 +480,22 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   <div class="panel">
     <h2>1:1 상대 난이도</h2>
     <div id="rivals" class="rivals"></div>
-    <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 순으로 강해집니다.</p>
+    <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 → 화성신 → 우주신 순으로 강해집니다.</p>
+  </div>
+
+  <div class="panel stats-panel" aria-labelledby="stats-title">
+    <h2 id="stats-title">나의 승률</h2>
+    <div class="stats-grid">
+      <div class="stats-row">
+        <span>오늘</span>
+        <strong id="stats-today">0전 0승 0패 <em>(승률 0.0%)</em></strong>
+      </div>
+      <div class="stats-row total">
+        <span>누적</span>
+        <strong id="stats-all">0전 0승 0패 <em>(승률 0.0%)</em></strong>
+      </div>
+    </div>
+    <p class="stats-note">이 기기의 브라우저에 자동 저장됩니다.</p>
   </div>
 
   <div class="panel">
@@ -473,6 +565,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 <div id="modal" class="modal hidden"><div class="modal-in" id="modal-in"></div></div>
 <div id="toast" class="toast hidden"></div>
+<div id="action-popup" class="action-popup hidden" aria-live="polite"></div>
 
 <script>
 "use strict";
@@ -753,7 +846,7 @@ function newPlayer(id, name, kind, level) {
   return {
     id, name,
     kind,            // 'human' | 'ai'
-    level,           // novice / adept / pro / kimmawi / nylongmusk
+    level,           // novice / adept / pro / kimmawi / nylongmusk / marsgod / spacegod
     tokens: zero(),
     board: [],       // 앞에 놓인 카드 (보너스·승점 유효)
     hand: [],        // 손에 든 예약 카드 (최대 3)
@@ -884,7 +977,9 @@ function legalMoves(g) {
 
   // 1) 서로 다른 색 3개 (남은 색이 3개 미만이면 있는 만큼)
   const avail = COLORS.filter((c) => g.bank[c] > 0);
-  const take = Math.min(3, avail.length);
+  // 차례 종료 시 토큰을 자동 반납하지 않도록, 현재 보유량을 넘지 않는
+  // 선택지만 만든다. (예: 8개 보유 시에는 2개만 가져올 수 있음)
+  const take = Math.min(3, avail.length, TOKEN_LIMIT - held);
   if (take > 0) {
     for (const set of combos(avail, take)) {
       moves.push({ type: 'take3', colors: set });
@@ -892,7 +987,9 @@ function legalMoves(g) {
   }
   // 2) 같은 색 2개 (해당 색이 4개 이상 남아 있을 때)
   for (const c of COLORS) {
-    if (g.bank[c] >= 4) moves.push({ type: 'take2', color: c });
+    if (g.bank[c] >= 4 && held + 2 <= TOKEN_LIMIT) {
+      moves.push({ type: 'take2', color: c });
+    }
   }
   // 3) 예약 + 마스터볼 1개 (희귀/전설은 예약 불가)
   if (p.hand.length < HAND_LIMIT) {
@@ -1061,13 +1158,16 @@ function finish(g) {
 
 // AI — 초보자(novice) / 수련자(adept) / 장프로(pro)
 //      / 김마귀(kimmawi) / 나일롱머스크(nylongmusk)
+//      / 화성신(marsgod) / 우주신(spacegod)
 //
-// 다섯 난이도의 차이는 "무엇을 볼 수 있는가"이다.
+// 일곱 난이도의 차이는 "무엇을 볼 수 있는가"이다.
 //   초보자 : 눈앞의 점수와 토큰만 본다. 보너스의 장기 가치·진화 계획을 못 본다. 가끔 아무거나 집는다.
 //   수련자 : 보너스 가치와 진화 가능성까지 보고, 상대 한 턴을 내다본다.
 //   장프로 : 후보 수마다 자기 턴을 여러 번 굴려 "18점까지 몇 턴"을 직접 재고 최단 경로를 고른다.
 //   김마귀 : 자기 레이스뿐 아니라 상대의 최선 응수까지 읽고 방해 수를 함께 고른다.
 //   나일롱머스크 : 더 넓은 후보와 장기 맞대결 롤아웃으로 김마귀의 후속 계획까지 읽는다.
+//   화성신 : 시장의 거의 모든 유력 수를 대상으로 더 긴 대국을 예측한다.
+//   우주신 : 가장 넓은 후보와 가장 긴 대국 예측으로 화성신의 장기 계획까지 읽는다.
 // ── 난이도 프로파일 ───────────────────────────────────────────
 const PROFILE = {
   novice: {
@@ -1101,6 +1201,22 @@ const PROFILE = {
     lookahead: 0, rollout: 10, pace: 8, blunder: 0, noise: 0,
     searchDepth: 2, rootBeam: 20, searchBeam: 12, opponentWeight: 0.20, searchPace: 1.5,
     versusRollout: 16, versusWeight: 0.90,
+  },
+  // 화성신 = 나일롱머스크보다 넓은 후보를 24수 맞대결로 검증한다.
+  marsgod: {
+    vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
+    rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
+    lookahead: 0, rollout: 12, pace: 8.5, blunder: 0, noise: 0,
+    searchDepth: 2, rootBeam: 26, searchBeam: 14, opponentWeight: 0.22, searchPace: 1.55,
+    versusRollout: 24, versusWeight: 0.92,
+  },
+  // 우주신 = 가장 넓은 후보를 40수 맞대결로 검증하는 진짜 최고 난이도.
+  spacegod: {
+    vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
+    rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
+    lookahead: 0, rollout: 16, pace: 9.5, blunder: 0, noise: 0,
+    searchDepth: 2, rootBeam: 36, searchBeam: 18, opponentWeight: 0.18, searchPace: 1.7,
+    versusRollout: 40, versusWeight: 0.90,
   },
 };
 
@@ -1458,6 +1574,8 @@ const LEVEL_NAMES = {
   pro: '장프로',
   kimmawi: '김마귀',
   nylongmusk: '나일롱머스크',
+  marsgod: '화성신',
+  spacegod: '우주신',
 };
 
 // UI 컨트롤러
@@ -1473,9 +1591,77 @@ let G = null;              // 게임 상태
 let ME = 0;                // 내 플레이어 인덱스
 let pick = [];             // 선택한 토큰 색
 let busy = false;
+let statsRecorded = false;
 
 // ── 로비 ──────────────────────────────────────────────────────
 let rivalLevel = 'adept';
+const STATS_KEY = 'poke-splendor-stats-v1';
+let statsCache = null;
+
+const emptyStats = () => ({ all: { games: 0, wins: 0, losses: 0 }, days: {} });
+
+function cleanRecord(value) {
+  const wins = Math.max(0, Math.floor(Number(value?.wins) || 0));
+  const losses = Math.max(0, Math.floor(Number(value?.losses) || 0));
+  return { games: wins + losses, wins, losses };
+}
+
+function todayKey() {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function loadStats() {
+  if (statsCache) return statsCache;
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(STATS_KEY) || 'null'); } catch (_) { /* 저장소 차단·손상 시 새 기록 */ }
+  const stats = emptyStats();
+  stats.all = cleanRecord(raw?.all);
+  if (raw?.days && typeof raw.days === 'object') {
+    for (const [day, value] of Object.entries(raw.days)) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(day)) stats.days[day] = cleanRecord(value);
+    }
+  }
+  statsCache = stats;
+  return stats;
+}
+
+function saveStats(stats) {
+  statsCache = stats;
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (_) { /* 현재 실행 중에는 메모리에 유지 */ }
+}
+
+function statsText(record) {
+  const rate = record.games ? record.wins / record.games * 100 : 0;
+  return `${record.games}전 ${record.wins}승 ${record.losses}패 <em>(승률 ${rate.toFixed(1)}%)</em>`;
+}
+
+function renderStats() {
+  const stats = loadStats();
+  const today = stats.days[todayKey()] || cleanRecord(null);
+  $('#stats-today').innerHTML = statsText(today);
+  $('#stats-all').innerHTML = statsText(stats.all);
+}
+
+function recordGameResult() {
+  if (statsRecorded || !G?.over) return null;
+  const stats = loadStats();
+  const day = todayKey();
+  const today = stats.days[day] || cleanRecord(null);
+  const won = G.winner === G.players[ME].id;
+
+  for (const record of [stats.all, today]) {
+    record.games++;
+    if (won) record.wins++;
+    else record.losses++;
+  }
+  stats.days[day] = today;
+  statsRecorded = true;
+  saveStats(stats);
+  renderStats();
+  return { today, all: stats.all };
+}
 
 function renderRivals() {
   const box = $('#rivals');
@@ -1493,6 +1679,7 @@ function renderRivals() {
 }
 
 renderRivals();
+renderStats();
 
 $('#start').onclick = () => {
   const name = ($('#myname').value || '나').trim().slice(0, 8);
@@ -1502,6 +1689,7 @@ $('#start').onclick = () => {
   ];
   ME = 0;
   G = newGame({ players });
+  statsRecorded = false;
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   render();
@@ -1574,10 +1762,10 @@ function cardNode(c, opts = {}) {
 
 /** 고정 현황 패널용 카드. 작은 크기에서도 이름·점수·보너스가 읽히게 단순화한다. */
 function collectionCardNode(c, opts = {}) {
-  const interactive = Boolean(opts.interactive);
+  const actionable = Boolean(opts.interactive);
   const evolution = opts.showEvolution && c.to && c.need;
-  const n = el(interactive ? 'button' : 'div', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}${evolution ? ' has-evo' : ''}`);
-  if (interactive) n.type = 'button';
+  const n = el('button', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}${evolution ? ' has-evo' : ''}`);
+  n.type = 'button';
   const evolutionTitle = evolution
     ? ` · 진화 조건 ${Object.entries(c.need).map(([color, amount]) => `${BALL[color].name} 보너스 ${amount}`).join(', ')}`
     : '';
@@ -1593,8 +1781,58 @@ function collectionCardNode(c, opts = {}) {
     `<img src="${spriteUrl(c.dex)}" loading="lazy" alt="">` +
     evolutionBadge +
     `<span class="collection-name">${c.label}</span>`;
-  if (interactive) n.onclick = () => onCardTap(c);
+  n.onclick = () => showCardDetail(c, {
+    owner: opts.owner,
+    kept: Boolean(opts.kept),
+    actionable,
+  });
   return n;
+}
+
+/** 손패/획득 카드의 모든 정보를 중앙 팝업으로 크게 보여준다. */
+function showCardDetail(c, opts = {}) {
+  const wrap = el('section', `card-detail fam-${c.color}`);
+  const stageName = c.tier === 'R' ? '희귀' : c.tier === 'L' ? '전설·환상' : `${c.tier}단계`;
+  const costRows = Object.entries(c.cost || {}).filter(([, amount]) => amount).map(([color, amount]) =>
+    `<span class="detail-chip ${color}">${pball(color)}<b>${BALL[color].name}</b><strong>${amount}개</strong></span>`
+  ).join('');
+  const evoRows = c.to && c.need ? Object.entries(c.need).map(([color, amount]) =>
+    `<span class="detail-chip ${color}">${pball(color)}<b>${BALL[color].name} 카드 보너스</b><strong>${amount}개</strong></span>`
+  ).join('') : '';
+
+  wrap.innerHTML = `
+    <button class="detail-close" type="button" aria-label="닫기">×</button>
+    <div class="detail-heading">
+      <span class="detail-kicker">${opts.owner || ''}${opts.kept ? ' · 찜한 카드' : ' · 획득 카드'}</span>
+      <h3>${c.label}</h3>
+      <span class="detail-stage">${stageName}</span>
+    </div>
+    <div class="detail-main">
+      <div class="detail-art"><img src="${spriteUrl(c.dex)}" alt="${c.label}"></div>
+      <div class="detail-stats">
+        <div class="detail-score"><span>카드 점수</span><strong>${c.vp}</strong><em>점</em></div>
+        <div class="detail-bonus"><span>영구 보너스</span><div>${pball(c.color)}<strong>${BALL[c.color].name} × ${c.bonus}</strong></div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>획득 비용</h4>
+      <div class="detail-chips">${costRows || '<span class="detail-none">비용 없음</span>'}</div>
+    </div>
+    <div class="detail-section evolution-detail">
+      <h4>진화 조건</h4>
+      ${c.to && c.need ? `
+        <div class="evolution-route">
+          <span>${c.label}</span><b>→</b><img src="${spriteUrl(DEX[c.to].dex)}" alt=""><strong>${DEX[c.to].label || c.to}</strong>
+        </div>
+        <div class="detail-chips">${evoRows}</div>
+        <p>위 색상의 <b>카드 보너스</b>가 필요합니다. 토큰은 진화 조건에 포함되지 않습니다.</p>`
+        : '<span class="detail-none">더 이상 진화하지 않는 카드입니다.</span>'}
+    </div>
+    ${opts.actionable ? '<button class="primary detail-action" type="button">이 카드로 행동하기</button>' : ''}`;
+  wrap.querySelector('.detail-close').onclick = closeModal;
+  const action = wrap.querySelector('.detail-action');
+  if (action) action.onclick = () => { closeModal(); onCardTap(c); };
+  openModal(wrap);
 }
 
 function renderCollection(selector, cards, opts = {}) {
@@ -1627,8 +1865,8 @@ function render() {
     `<span class="turn-flag">${G.turn === rival.id && !G.over ? '상대 차례' : ''}</span>`;
   $('#rival-owned-count').textContent = rival.board.length;
   $('#rival-kept-count').textContent = rival.hand.length;
-  renderCollection('#rival-owned', rival.board);
-  renderCollection('#rival-kept', rival.hand, { kept: true });
+  renderCollection('#rival-owned', rival.board, { owner: rival.name, showEvolution: true });
+  renderCollection('#rival-kept', rival.hand, { owner: rival.name, kept: true, showEvolution: true });
 
   // 시장 — 전설·환상·희귀는 한 줄로 합쳐 다른 단계와 같은 카드 크기로 표시
   const spec = $('#row-special');
@@ -1679,8 +1917,8 @@ function render() {
     (COLORS.some((c) => mb[c]) ? COLORS.filter((c) => mb[c]).map((c) => pip(c, mb[c])).join('') : '<span class="lb" style="width:auto">없음</span>');
   $('#me-owned-count').textContent = me.board.length;
   $('#me-kept-count').textContent = me.hand.length;
-  renderCollection('#me-owned', me.board, { showEvolution: true });
-  renderCollection('#me-kept', me.hand, { interactive: myTurn, kept: true });
+  renderCollection('#me-owned', me.board, { owner: me.name, showEvolution: true });
+  renderCollection('#me-kept', me.hand, { owner: me.name, interactive: myTurn, kept: true, showEvolution: true });
 
   // 액션바 — 고른 토큰은 눌러서 뺄 수 있다
   const pk = $('#picks');
@@ -1709,7 +1947,8 @@ function render() {
 function canPick(c) {
   if (!G.bank[c]) return false;
   const same = pick.filter((x) => x === c).length;
-  if (pick.length >= 3) return false;
+  const capacity = TOKEN_LIMIT - tokenCount(G.players[ME]);
+  if (pick.length >= Math.min(3, capacity)) return false;
   if (same === 1 && pick.length === 1) return G.bank[c] >= 4;     // 같은 색 2개 규칙
   if (same >= 1) return false;
   if (pick.length === 2 && pick[0] === pick[1]) return false;
@@ -1806,6 +2045,7 @@ async function doHumanMove(mv) {
   busy = true;
   pick = [];
   applyMove(G, mv);
+  playSound(mv.type === 'take2' || mv.type === 'take3' ? 'coin' : mv.type === 'buy' ? 'card' : 'reserve');
   render();
   await askEvolution(G.players[ME]);
   await finishTurn();
@@ -1830,7 +2070,7 @@ function askEvolution(p) {
         `<img src="${spriteUrl(from.dex)}"><span>${from.label} <small>(${from.vp}점)</small></span>` +
         `<span class="arrow">→</span>` +
         `<img src="${spriteUrl(to.dex)}"><span>${to.label} <small>(${to.vp}점)</small></span>`;
-      b.onclick = () => { applyEvolution(G, e, p); closeModal(); resolve(); };
+      b.onclick = () => { applyEvolution(G, e, p); playSound('evolution'); closeModal(); resolve(); };
       box.appendChild(b);
     }
     const skip = el('button', 'ghost big', '진화하지 않기');
@@ -1854,15 +2094,19 @@ async function step() {
   if (G.turn === ME) { render(); return; }
   busy = true;
   render();
-  await sleep(['pro', 'kimmawi', 'nylongmusk'].includes(cur(G).level) ? 260 : 200);
+  await sleep(['pro', 'kimmawi', 'nylongmusk', 'marsgod', 'spacegod'].includes(cur(G).level) ? 260 : 200);
   const p = cur(G);
   const mv = chooseMove(G);
+  showAction(`${p.name}: ${describeMove(mv)}`);
+  await sleep(1000);
   applyMove(G, mv);
+  playSound(mv.type === 'take2' || mv.type === 'take3' ? 'coin' : mv.type === 'buy' ? 'card' : 'reserve');
   render();
   await sleep(220);
   const evo = chooseEvolution(G);
   if (evo) {
     applyEvolution(G, evo, p);
+    playSound('evolution');
     toast(`${p.name}: 진화!`);
     render();
     await sleep(320);
@@ -1892,15 +2136,63 @@ function toast(msg) {
   toastT = setTimeout(() => t.classList.add('hidden'), 1400);
 }
 
+function describeMove(mv) {
+  if (mv.type === 'take2') return '코인 2개 가져가기';
+  if (mv.type === 'take3') return `코인 ${mv.colors.length}개 가져가기`;
+  if (mv.type === 'pass') return '패스';
+  const found = mv.id ? findCard(G, mv.id) : null;
+  if (mv.type === 'buy') return `${found?.card?.label || '카드'} 획득`;
+  if (mv.type === 'reserve' || mv.type === 'reserveDeck') return `${found?.card?.label || `${mv.tier}단계 카드`} 찜하기`;
+  return '행동';
+}
+
+let audioCtx = null;
+function playSound(kind) {
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const tones = { coin: [620, 880], card: [220, 330], reserve: [440, 660], evolution: [392, 523, 784] };
+    const now = audioCtx.currentTime;
+    tones[kind].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = kind === 'coin' ? 'sine' : 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, now + i * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + i * 0.09 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.16);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.09); osc.stop(now + i * 0.09 + 0.18);
+    });
+  } catch (_) { /* 사운드를 지원하지 않는 브라우저에서도 게임은 계속 진행 */ }
+}
+
+let actionTimer = null;
+function showAction(msg) {
+  const node = $('#action-popup');
+  node.textContent = msg;
+  node.classList.remove('hidden');
+  clearTimeout(actionTimer);
+  actionTimer = setTimeout(() => node.classList.add('hidden'), 1200);
+}
+
 function showResult() {
   const box = el('div');
   box.innerHTML = `<h3>게임 종료</h3>`;
+  const resultStats = recordGameResult();
   const ranked = G.ranking.map((id) => G.players.find((p) => p.id === id));
   ranked.forEach((p, i) => {
     const row = el('div', 'result-row' + (i === 0 ? ' win' : ''));
     row.innerHTML = `<span>${i + 1}위 · ${p.name}</span><span>${score(p)}점 · 진화 ${p.buried.length} · 카드 ${p.board.length}</span>`;
     box.appendChild(row);
   });
+  if (resultStats) {
+    const summary = el('div', 'result-stats');
+    summary.innerHTML =
+      `<span><b>오늘</b> ${statsText(resultStats.today)}</span>` +
+      `<span><b>누적</b> ${statsText(resultStats.all)}</span>`;
+    box.appendChild(summary);
+  }
   const again = el('button', 'primary big', '다시 하기');
   again.style.marginTop = '12px';
   again.onclick = () => location.reload();
