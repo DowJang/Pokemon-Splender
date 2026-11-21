@@ -2496,14 +2496,14 @@ function renderRivals() {
 renderRivals();
 renderStats();
 
-function startGame(practice) {
+function startGame(practice, seed) {
   const name = $('#myname').value.trim().slice(0, 8) || '나';
   const players = [
     newPlayer(0, name, 'human', null),
     newPlayer(1, LEVEL_NAMES[rivalLevel], 'ai', rivalLevel),
   ];
   ME = 0;
-  G = newGame({ players });
+  G = newGame({ players, seed });
   training = practice ? { lesson: null, history: [] } : null;
   resolvingAction = '';
   setBroadcast(practice);
@@ -3264,14 +3264,26 @@ function showResult() {
       `<span><b>누적</b> ${statsText(resultStats.all)}</span>`;
     box.appendChild(summary);
   }
-  const again = el('button', 'primary big', '다시 하기');
+  const isTraining = Boolean(training);
+  const finishedSeed = G.seed;
+  const again = el('button', 'primary', isTraining ? '새로 시작하기' : '다시 하기');
   again.dataset.sound = 'none';
-  again.onclick = () => { closeModal(); startGame(Boolean(training)); };
-  const lobby = el('button', 'ghost', '로비로');
-  lobby.onclick = () => location.reload();
+  again.onclick = () => {
+    closeModal();
+    if (!isTraining) return startGame(false);
+    const now = Date.now();
+    // 셔플은 시드의 하위 32비트를 사용하며 0과 1은 같은 배치를 만든다.
+    const sameShuffle = (now >>> 0 || 1) === (finishedSeed >>> 0 || 1);
+    startGame(true, sameShuffle ? now + 2 : now);
+  };
+  const alternate = el('button', 'ghost', isTraining ? '동일한 배치로 다시' : '로비로');
+  alternate.onclick = () => {
+    if (!isTraining) return location.reload();
+    closeModal();
+    startGame(true, finishedSeed);
+  };
   const controls = el('div', 'grid2');
-  again.classList.remove('big');
-  controls.append(again, lobby);
+  controls.append(again, alternate);
   box.appendChild(controls);
   openModal(box, true);
   if (won) celebrate();
