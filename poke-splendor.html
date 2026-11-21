@@ -459,6 +459,26 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   .toast { bottom: calc(104px + var(--safe-b)); }
 }
 
+#training-start { color: #a8dbff; border-color: #5588ad; }
+#coach-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1d3144; border-left: 3px solid #87ceff; }
+#coach-bar div { flex: 1; min-width: 0; }
+#coach-bar small, #coach-bar strong { display: block; line-height: 1.4; }
+#coach-caption { color: #b4d1e4; font-size: 11px; }
+#coach-tip { font-size: 13px; }
+#coach-open { padding: 7px 10px; flex: none; font-size: 12px; }
+.lesson { word-break: keep-all; overflow-wrap: anywhere; }
+.lesson header { display: flex; align-items: center; justify-content: space-between; }
+.lesson header h3 { margin: 0; }
+.lesson header button { padding: 6px 12px; }
+.lesson .coach-recommend { background: #20384c; border-left: 3px solid #87ceff; padding: 10px 12px; margin: 12px 0; }
+.lesson .coach-recommend strong { display: block; color: #cbeaff; font-size: 16px; }
+.lesson h4 { margin: 13px 0 4px; }
+.lesson p { margin: 4px 0; }
+.lesson select { width: 100%; margin: 6px 0; padding: 9px; color: var(--ink); background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.lesson details { margin-top: 12px; font-size: 13px; }
+.lesson summary { cursor: pointer; color: #b4d9ef; }
+.lesson .branch { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.lesson .primary, .lesson .sample { width: 100%; padding: 10px; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -504,6 +524,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   </div>
 
   <button id="start" class="primary big">게임 시작</button>
+  <button id="training-start" class="ghost big">남편격파훈련</button>
   <button id="how" class="ghost">규칙 보기</button>
   <p class="foot">개인용 · 비상업 · 오프라인 실행</p>
 </section>
@@ -525,6 +546,10 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   </section>
 
   <main class="playfield">
+    <aside id="coach-bar" class="hidden" aria-label="훈련 코치">
+      <div aria-live="polite"><small id="coach-caption"></small><strong id="coach-tip"></strong></div>
+      <button id="coach-open" class="ghost">수 읽기</button>
+    </aside>
     <div id="board" class="board">
       <div class="rowwrap"><div class="rowlabel">전설·환상 · 희귀</div><div class="cards" id="row-special"></div></div>
       <div class="rowwrap"><div class="rowlabel" id="label-3">3단계</div><div class="cards" id="row-3"></div></div>
@@ -1551,9 +1576,8 @@ function chooseMove(g) {
 }
 
 /** 차례 종료 시 진화 선택 (없으면 null) */
-function chooseEvolution(g) {
+function chooseEvolution(g, w = prof(cur(g))) {
   const p = cur(g);
-  const w = prof(p);
   const evos = evolutions(g);
   if (!evos.length) return null;
   if (w.blunder && Math.random() < 0.25) return null;   // 초보자는 가끔 놓친다
@@ -1578,6 +1602,145 @@ const LEVEL_NAMES = {
   spacegod: '우주신',
 };
 
+const COACH_PROFILE = { ...PROFILE.kimmawi, opponentWeight: 1 };
+const STUDY_SAMPLES = 4;
+const MATCH_SAMPLES = 12;
+
+function moveKey(mv) {
+  return mv.type + '/' + (mv.id ?? mv.tier ?? mv.color ?? mv.colors?.slice().sort().join('') ?? '');
+}
+
+function moveTitle(g, mv) {
+  if (mv.type === 'take2') return `${BALL[mv.color].name} 2개 가져오기`;
+  if (mv.type === 'take3') return mv.colors.map(c => BALL[c].name).join('·') + ' 가져오기';
+  if (mv.type === 'reserveDeck') return `${mv.tier}단계 덱에서 찜`;
+  if (mv.type === 'pass') return '패스';
+  const found = findCard(g, mv.id);
+  const c = found.card;
+  const copies = [...g.market[c.tier], ...cur(g).hand].filter(other => other?.mon === c.mon);
+  const location = copies.length < 2 ? '' : found.where === 'hand' ? ` (내 찜 ${found.idx + 1})` : ` (${c.tier}단계 ${found.idx + 1}번째)`;
+  return `${c.label}${location} ${mv.type === 'buy' ? '잡기' : '찜'}`;
+}
+
+// 덱 순서를 정규화한 뒤 같은 가상 배치를 모든 후보에 공통 적용한다.
+function studyWorld(g, sample) {
+  const world = clone(g);
+  const rand = rng(Math.imul(g.round + 1, 2654435761) ^ Math.imul(sample + 1, 1597334677) ^ g.turn);
+  for (const tier of Object.keys(world.decks)) {
+    const cards = world.decks[tier].sort((a, b) => a.id.localeCompare(b.id));
+    world.decks[tier] = shuffle(cards, rand);
+  }
+  return world;
+}
+
+function cardGap(p, c, bon = bonuses(p)) {
+  const missing = COLORS.reduce((sum, k) => sum + Math.max(0, (c.cost[k] || 0) - bon[k] - p.tokens[k]), 0);
+  return Math.max(0, missing + (c.cost.m || 0) - p.tokens.m);
+}
+
+function cardTargets(g, p) {
+  const bon = bonuses(p);
+  const cards = [...Object.values(g.market).flat(), ...p.hand].filter(Boolean);
+  return cards.map(c => {
+    const gap = cardGap(p, c, bon);
+    const finishBonus = score(p) + c.vp >= WIN_SCORE ? 8 : 0;
+    const value = (c.vp * 2.2 + c.bonus * 2 + finishBonus) / (1 + gap);
+    return { c, gap, value };
+  }).sort((a, b) => b.value - a.value);
+}
+
+function targetText({ c, gap }, p) {
+  const bon = bonuses(p);
+  const costs = ALL_COLORS.map(k => {
+    const n = (c.cost[k] || 0) - bon[k] - p.tokens[k];
+    return n > 0 ? BALL[k].name + ' ' + n : '';
+  }).filter(Boolean);
+  const wild = Math.max(0, p.tokens.m - (c.cost.m || 0));
+  const need = gap ? costs.join('·') + ' 필요' + (wild ? ` (보유 마스터볼로 ${wild}개 대체 가능)` : '') : '지금 잡을 수 있음';
+  return `${c.label} (${c.vp}점) · ${need}`;
+}
+
+function moveReason(g, mv) {
+  const p = cur(g);
+  const rival = g.players[1 - g.turn];
+  if (mv.type === 'pass') return '가능한 행동이 없어 차례를 넘깁니다.';
+  if (mv.type === 'reserveDeck') return `${mv.tier}단계의 새 카드를 확보합니다. ${g.bank.m ? '마스터볼도 1개 받습니다.' : '은행의 마스터볼은 소진됐습니다.'}`;
+  if (mv.id) {
+    const f = findCard(g, mv.id);
+    const c = f.card;
+    const denial = f.where === 'market' && canAfford(rival, c) ? ' 상대가 당장 잡을 기회도 막습니다.' : '';
+    if (mv.type === 'reserve') {
+      const evolvesFrom = p.board.find(base => base.to === c.mon);
+      const purpose = evolvesFrom ? `${evolvesFrom.label}의 진화 카드를 확보합니다.` : `나중에 잡을 ${c.vp}점짜리 카드를 선점합니다.`;
+      return purpose + (g.bank.m ? ' 마스터볼 1개도 받습니다.' : '') + denial;
+    }
+    const target = cardTargets(g, p).find(t => t.c.id !== c.id && (t.c.cost[c.color] || 0) > bonuses(p)[c.color]);
+    const discount = target ? ` ${target.c.label}의 ${BALL[c.color].name} 비용도 줄어듭니다.` : '';
+    return `${c.vp}점과 ${BALL[c.color].name} 보너스 ${c.bonus}개를 얻습니다.` + (denial || discount);
+  }
+  const after = { ...p, tokens: { ...p.tokens } };
+  for (const color of mv.colors || [mv.color, mv.color]) after.tokens[color]++;
+  const target = cardTargets(g, after).find(t => t.gap < cardGap(p, t.c));
+  if (target) return `${target.c.label}(${target.c.vp}점)에 부족한 토큰이 ${cardGap(p, target.c)}개에서 ${target.gap}개로 줄어듭니다.`;
+  return '여러 카드에 쓸 토큰을 비축합니다. 현재 공개된 목표의 부족분은 그대로입니다.';
+}
+
+function studyChoices(g, moves) {
+  const pid = cur(g).id;
+  return moves.map(mv => {
+    const next = advanceTurn(g, mv, COACH_PROFILE);
+    return { mv, next, value: duelValue(next, pid, COACH_PROFILE) };
+  }).sort((a, b) => b.value - a.value);
+}
+
+// 상대의 유력한 두 응수 각각에 내 후속 수를 적용한 뒤, 내게 더 불리한 가지를 평가한다.
+function studyLine(world, mv) {
+  const pid = cur(world).id;
+  const after = advanceTurn(world, mv, COACH_PROFILE);
+  if (after.over) return { value: duelValue(after, pid, COACH_PROFILE), branches: [] };
+  const replies = studyChoices(after, legalMoves(after)).slice(0, 2);
+  const branches = replies.map(reply => {
+    const recovery = reply.next.over ? null : studyChoices(reply.next, pruned(reply.next, COACH_PROFILE))[0];
+    const end = recovery?.next || reply.next;
+    return {
+      reply: moveTitle(after, reply.mv),
+      replyKey: moveKey(reply.mv),
+      response: recovery ? moveTitle(reply.next, recovery.mv) : '',
+      scores: `${score(end.players[pid])} 대 ${score(end.players[1 - pid])}`,
+      result: end.over ? (end.winner === pid ? '승리' : '패배') : '',
+      value: duelValue(end, pid, COACH_PROFILE)
+    };
+  }).sort((a, b) => a.value - b.value);
+  return { value: branches[0].value, branches };
+}
+
+function makeLesson(g) {
+  const worlds = Array.from({ length: STUDY_SAMPLES }, (_, i) => studyWorld(g, i));
+  const options = legalMoves(g).map(mv => {
+    const lines = worlds.map(world => studyLine(world, mv));
+    const value = lines.reduce((s, line) => s + line.value, 0) / worlds.length;
+    return { mv, key: moveKey(mv), title: moveTitle(g, mv), value, lines };
+  }).sort((a, b) => b.value - a.value);
+  return { options, targets: cardTargets(g, cur(g)).slice(0, 2) };
+}
+
+// 종국 표본에서는 양쪽 모두 현재 보이는 카드만으로 수를 정한다.
+// 평가용 복제본에는 보충 카드를 넣지 않고 선택 후에만 가상 덱의 카드를 공개한다.
+function rolloutMove(g) {
+  const visible = clone(g);
+  for (const tier of Object.keys(visible.decks)) visible.decks[tier] = [];
+  const moves = pruned(g, COACH_PROFILE).filter(m => m.type !== 'reserveDeck');
+  return moves.length ? studyChoices(visible, moves)[0].mv : legalMoves(g)[0];
+}
+
+function matchSample(g, mv, sample) {
+  let state = advanceTurn(studyWorld(g, sample + STUDY_SAMPLES), mv, COACH_PROFILE);
+  for (let ply = 0; ply < 120 && !state.over; ply++) {
+    state = advanceTurn(state, rolloutMove(state), COACH_PROFILE);
+  }
+  return state.over ? (state.winner === cur(g).id ? 'win' : 'loss') : 'unfinished';
+}
+
 // UI 컨트롤러
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => {
@@ -1592,6 +1755,7 @@ let ME = 0;                // 내 플레이어 인덱스
 let pick = [];             // 선택한 토큰 색
 let busy = false;
 let statsRecorded = false;
+let training = null;
 
 // ── 로비 ──────────────────────────────────────────────────────
 let rivalLevel = 'adept';
@@ -1645,7 +1809,7 @@ function renderStats() {
 }
 
 function recordGameResult() {
-  if (statsRecorded || !G?.over) return null;
+  if (training || statsRecorded || !G?.over) return null;
   const stats = loadStats();
   const day = todayKey();
   const today = stats.days[day] || cleanRecord(null);
@@ -1681,7 +1845,7 @@ function renderRivals() {
 renderRivals();
 renderStats();
 
-$('#start').onclick = () => {
+function startGame(practice) {
   const name = ($('#myname').value || '나').trim().slice(0, 8);
   const players = [
     newPlayer(0, name, 'human', null),
@@ -1689,12 +1853,18 @@ $('#start').onclick = () => {
   ];
   ME = 0;
   G = newGame({ players });
+  training = practice ? { lesson: null, history: [] } : null;
+  $('#coach-bar').classList.toggle('hidden', !training);
   statsRecorded = false;
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   render();
   step();
-};
+}
+
+$('#start').onclick = () => startGame(false);
+$('#training-start').onclick = () => startGame(true);
+$('#coach-open').onclick = () => showLesson();
 
 $('#how').onclick = showRules;
 $('#menu').onclick = showMenu;
@@ -2039,9 +2209,143 @@ function reserveFromDeck(tier) {
   doHumanMove({ type: 'reserveDeck', tier });
 }
 
+function appendReview(box, rows) {
+  if (!rows.length) return;
+  const history = el('details');
+  history.appendChild(el('summary', '', `라운드별 복기 (${rows.length})`));
+  for (const row of rows.slice().reverse()) {
+    const item = el('div', 'branch');
+    item.appendChild(el('strong', '', `${row.round}라운드 · ${row.chosen}`));
+    item.appendChild(el('p', '', `당시 추천 · ${row.best}`));
+    if (row.opponent) item.appendChild(el('p', '', `상대 · ${row.opponent}`));
+    if (row.recovery) item.appendChild(el('p', '', `다음 추천 · ${row.recovery}`));
+    history.appendChild(item);
+  }
+  box.appendChild(history);
+}
+
+function showLesson() {
+  if (!training?.lesson || busy || G.over || G.turn !== ME) return;
+  const lesson = training.lesson;
+  const last = training.history.at(-1);
+  const best = lesson.options[0];
+  const box = el('div', 'lesson');
+  const header = el('header');
+  const close = el('button', 'ghost', '닫기');
+  close.onclick = closeModal;
+  header.append(el('h3', '', `남편격파훈련 · ${G.round}라운드`), close);
+  box.appendChild(header);
+  if (last?.opponent) {
+    box.append(el('h4', '', '상대 행동과 예상 의도'), el('p', '', last.opponent));
+  }
+  const advice = el('div', 'coach-recommend');
+  advice.append(el('small', '', last?.deviation ? '지난 선택 뒤의 만회 수' : '이번 턴 추천'), el('strong', '', best.title), el('p', '', moveReason(G, best.mv)));
+  box.appendChild(advice);
+  box.appendChild(el('h4', '', '노릴 카드'));
+  for (const target of lesson.targets) box.appendChild(el('p', '', targetText(target, G.players[ME])));
+  const threat = cardTargets(G, G.players[1 - ME]).find(t => !G.players[1 - ME].hand.includes(t.c));
+  if (threat) {
+    const block = lesson.options.find(o => o.mv.id === threat.c.id);
+    box.append(el('h4', '', '상대 견제'), el('p', '', `상대 기준 ${targetText(threat, G.players[1 - ME])}. ` +
+      (block ? `먼저 ${block.title}로 선점할 수 있습니다.` : `선점이 어려우므로 ${best.title}로 내 계획을 진행하세요.`)));
+  }
+  const select = el('select');
+  select.id = 'study-choice';
+  const label = el('label', '', '비교할 내 행동');
+  label.htmlFor = select.id;
+  const heading = el('h4');
+  heading.appendChild(label);
+  lesson.options.forEach((o, i) => select.add(new Option(`${i === 0 ? '추천 · ' : i === 1 ? '차선 · ' : ''}${o.title}`, String(i))));
+  const details = el('div');
+  const apply = el('button', 'primary', '이 수로 두기');
+  apply.onclick = () => { closeModal(); doHumanMove(lesson.options[select.selectedIndex].mv); };
+  function preview() {
+    const option = lesson.options[select.selectedIndex];
+    details.replaceChildren();
+    if (option !== best) details.appendChild(el('p', '', moveReason(G, option.mv)));
+    const lines = new Map();
+    for (const line of option.lines) {
+      for (const [index, branch] of line.branches.entries()) {
+        const key = JSON.stringify([branch.reply, branch.response, branch.scores, branch.result]);
+        const entry = lines.get(key) || { ...branch, count: 0, strongest: 0 };
+        entry.count++;
+        if (index === 0) entry.strongest++;
+        lines.set(key, entry);
+      }
+    }
+    const sorted = [...lines.values()].sort((a, b) => b.strongest - a.strongest || b.count - a.count);
+    details.appendChild(el('h4', '', '예상 응수와 대응'));
+    if (!sorted.length) details.appendChild(el('p', '', '이 행동으로 마지막 라운드가 끝납니다.'));
+    for (const [i, b] of sorted.slice(0, 2).entries()) {
+      const row = el('div', 'branch');
+      row.append(el('strong', '', `${i === 0 ? '가장 경계할 수' : '다른 전개'} · ${b.reply}`),
+        el('p', '', `${b.response ? '내 대응 · ' + b.response + ' → ' : ''}내 점수 대 상대 점수 ${b.scores}${b.result ? ' · ' + b.result : ''}`),
+        el('small', '', `가상 배치 ${STUDY_SAMPLES}개 중 ${b.count}개에서 검토된 전개`));
+      details.appendChild(row);
+    }
+    details.appendChild(el('p', 'hint', `가상 덱 ${STUDY_SAMPLES}개에서 상대 응수와 내 후속 수를 탐색했습니다. 진화는 코치 추천을 가정합니다.`));
+    const sample = el('button', 'ghost sample', '이 선택의 모의 승률 보기');
+    const results = el('p');
+    results.setAttribute('aria-live', 'polite');
+    const report = () => {
+      const { win, loss, unfinished } = option.matches;
+      const completed = win + loss;
+      results.textContent = `${win}승 ${loss}패 · 미결 ${unfinished}판` +
+        (completed ? ` · 완주 ${completed}판 중 승률 ${Math.round(100 * win / completed)}%` : '') +
+        ' (양쪽 모두 간이 AI, 최대 120수)';
+    };
+    if (option.matches) report();
+    else {
+      details.appendChild(sample);
+      sample.onclick = async () => {
+        sample.disabled = true;
+        const record = { win: 0, loss: 0, unfinished: 0 };
+        for (let i = 0; i < MATCH_SAMPLES; i++) {
+          sample.textContent = `모의 대국 ${i + 1}/${MATCH_SAMPLES}`;
+          await sleep(12);
+          if (!sample.isConnected || $('#modal').classList.contains('hidden') || training?.lesson !== lesson) return;
+          record[matchSample(G, option.mv, i)]++;
+        }
+        option.matches = record;
+        sample.remove();
+        report();
+      };
+    }
+    details.appendChild(results);
+  }
+  select.onchange = preview;
+  box.append(heading, select, details, apply);
+  preview();
+  appendReview(box, training.history);
+  openModal(box);
+}
+
+function prepareLesson() {
+  training.lesson = makeLesson(G);
+  const best = training.lesson.options[0];
+  const last = training.history.at(-1);
+  if (last) last.recovery = best.title;
+  $('#coach-caption').textContent = last?.opponent ? `상대 · ${last.opponent}` : `남편격파훈련 · ${G.round}라운드`;
+  $('#coach-tip').textContent = `${last?.deviation ? '만회 수' : '추천'} · ${best.title}`;
+  $('#coach-open').disabled = false;
+}
+
 // ── 턴 진행 ───────────────────────────────────────────────────
 async function doHumanMove(mv) {
-  if (busy) return;
+  if (busy || G.over || G.turn !== ME) return;
+  if (training) {
+    const best = training.lesson.options[0];
+    const choice = training.lesson.options.find(o => o.key === moveKey(mv));
+    if (!choice) return;
+    training.history.push({
+      round: G.round, chosen: choice.title, best: best.title, deviation: choice.value < best.value,
+      threats: choice.lines.flatMap(line => line.branches.slice(0, 1).map(b => b.replyKey))
+    });
+    training.lesson = null;
+    $('#coach-open').disabled = true;
+    $('#coach-tip').textContent = '상대의 응수를 기다리는 중';
+    $('#coach-caption').textContent = '내 선택 · ' + choice.title;
+  }
   busy = true;
   pick = [];
   applyMove(G, mv);
@@ -2059,6 +2363,7 @@ function askEvolution(p) {
     box.innerHTML = '<h3>진화시킬까요?</h3><p>행동을 쓰지 않습니다. 이전 단계 카드는 트레이너 타일 밑으로 들어가 효력을 잃습니다.</p>';
     // 같은 포켓몬의 사본이 여럿 보일 수 있으므로 "무엇→무엇" 기준으로 한 번만 보여 준다
     const seen = new Set();
+    const suggested = training ? chooseEvolution(studyWorld(G, 0), COACH_PROFILE) : null;
     for (const e of evos) {
       const from = p.board.find((c) => c.id === e.from);
       const to = findCard(G, e.to).card;
@@ -2070,10 +2375,14 @@ function askEvolution(p) {
         `<img src="${spriteUrl(from.dex)}"><span>${from.label} <small>(${from.vp}점)</small></span>` +
         `<span class="arrow">→</span>` +
         `<img src="${spriteUrl(to.dex)}"><span>${to.label} <small>(${to.vp}점)</small></span>`;
+      if (suggested && suggested.from === e.from && findCard(G, suggested.to).card.mon === to.mon) {
+        b.appendChild(el('small', '', '코치 추천'));
+      }
       b.onclick = () => { applyEvolution(G, e, p); playSound('evolution'); closeModal(); resolve(); };
       box.appendChild(b);
     }
     const skip = el('button', 'ghost big', '진화하지 않기');
+    if (training && !suggested) skip.textContent += ' · 코치 추천';
     skip.onclick = () => { closeModal(); resolve(); };
     box.appendChild(skip);
     openModal(box, true);
@@ -2091,20 +2400,32 @@ async function finishTurn() {
 
 async function step() {
   if (!G || G.over) return;
-  if (G.turn === ME) { render(); return; }
+  if (G.turn === ME) {
+    if (training) prepareLesson();
+    render(); return;
+  }
   busy = true;
   render();
   await sleep(['pro', 'kimmawi', 'nylongmusk', 'marsgod', 'spacegod'].includes(cur(G).level) ? 260 : 200);
   const p = cur(G);
-  const mv = chooseMove(G);
-  showAction(`${p.name}: ${describeMove(mv)}`);
+  const mv = chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
+  const action = training ? moveTitle(G, mv) : describeMove(mv);
+  const intent = training ? moveReason(G, mv) : '';
+  showAction(`${p.name}: ${action}`);
   await sleep(1000);
   applyMove(G, mv);
+  if (training) {
+    const revealed = mv.type === 'reserveDeck' ? ' (' + p.hand.at(-1).label + ')' : '';
+    const last = training.history.at(-1);
+    const forecast = last.deviation && last.threats.includes(moveKey(mv)) ? '예측한 강수 · ' : '';
+    last.opponent = forecast + action + revealed + ' · ' + intent;
+  }
   playSound(mv.type === 'take2' || mv.type === 'take3' ? 'coin' : mv.type === 'buy' ? 'card' : 'reserve');
   render();
   await sleep(220);
-  const evo = chooseEvolution(G);
+  const evo = chooseEvolution(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES + 1) : G);
   if (evo) {
+    if (training) training.history.at(-1).opponent += ' 진화 → ' + findCard(G, evo.to).card.label;
     applyEvolution(G, evo, p);
     playSound('evolution');
     toast(`${p.name}: 진화!`);
@@ -2186,6 +2507,7 @@ function showResult() {
     row.innerHTML = `<span>${i + 1}위 · ${p.name}</span><span>${score(p)}점 · 진화 ${p.buried.length} · 카드 ${p.board.length}</span>`;
     box.appendChild(row);
   });
+  if (training) appendReview(box, training.history);
   if (resultStats) {
     const summary = el('div', 'result-stats');
     summary.innerHTML =
