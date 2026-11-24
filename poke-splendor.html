@@ -556,11 +556,14 @@ button:disabled { cursor: default; }
 .rival .nm { display: none; }
 .stats-row, #myname { background: #0e1b2e; border-color: #334b67; }
 .stats-note, .foot { color: #9baecb; }
-.mode-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.mode-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
 .mode-buttons .big { margin: 0; padding: 13px 8px; line-height: 1.25; }
 .mode-buttons small { display: block; margin-top: 5px; font-size: 11px; font-weight: 600; }
+#start { grid-column: 1 / -1; }
 #training-start { color: #c5fff0; border-color: #4caa9e; box-shadow: inset 0 1px #a0fff326; }
 #training-start:hover { background: #1f474c; }
+#swindler-start { color: #ffe0bc; border-color: #bb7862; box-shadow: inset 0 1px #ffd4af26; }
+#swindler-start:hover { background: #492f39; }
 
 #game {
   background:
@@ -967,6 +970,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   <div class="mode-buttons">
     <button id="start" class="primary big" data-sound="none">게임 시작<small>AI와 1:1 대전</small></button>
     <button id="training-start" class="ghost big" data-sound="none">남편격파훈련<small>승률 중계와 코치 복기</small></button>
+    <button id="swindler-start" class="ghost big" data-sound="none">사기꾼남편격파<small>집요한 견제와 고속 득점</small></button>
   </div>
   <button id="how" class="ghost">규칙 보기</button>
   <p class="foot">개인용 · 비상업 · 오프라인 실행 · 그림 <a href="https://www.pokemon.com/pokedex/" target="_blank" rel="noopener noreferrer">포켓몬 공식 도감</a></p>
@@ -2151,6 +2155,171 @@ function studyWorld(g, sample) {
   return world;
 }
 
+// 모든 스타일이 득점과 견제를 함께 평가하되, 판마다 집중할 약점이 달라진다.
+const PRESSURE_STYLES = [
+  { rival: 1.25, cutoff: 1.25, shortage: 0.65, evolution: 1.05, pace: 1.00 },
+  { rival: 1.17, cutoff: 1.00, shortage: 1.45, evolution: 1.05, pace: 1.04 },
+  { rival: 1.15, cutoff: 1.05, shortage: 0.80, evolution: 1.50, pace: 1.12 },
+];
+
+function pressureRandom(g) {
+  return rng(g.pressure.seed ^ Math.imul(g.round, 2654435761));
+}
+
+function pressureWeights(g) {
+  const style = PRESSURE_STYLES[g.pressure.style];
+  const rand = pressureRandom(g);
+  return Object.fromEntries(Object.entries(style).map(([key, weight]) => [key, weight * (0.9 + rand() * 0.2)]));
+}
+
+function pressureTargets(g, p, w) {
+  const bon = bonuses(p);
+  const points = score(p);
+  const early = Math.max(0, 1 - points / WIN_SCORE);
+  const normal = Object.values(g.market).flat().concat(p.hand).filter(Boolean);
+  const bases = p.board.filter(c => c.to);
+  return normal.map(c => {
+    let missing = 0, longest = 0, shortage = 0, invested = 0;
+    for (const color of COLORS) {
+      const cost = Math.max(0, (c.cost[color] || 0) - bon[color]);
+      const paid = Math.min(cost, p.tokens[color]);
+      const gap = cost - paid;
+      missing += gap;
+      invested += paid;
+      longest = Math.max(longest, gap - (gap >= 2 && g.bank[color] >= 4 ? 1 : 0));
+      shortage += Math.max(0, gap - g.bank[color]);
+    }
+    const master = c.cost.m || 0;
+    const wild = Math.max(0, p.tokens.m - master);
+    const wait = Math.max(0, (missing - wild) / 2.7, (longest - wild) * 0.84) + Math.max(0, master - p.tokens.m);
+    const scarcity = Math.max(0, shortage - wild) + (g.bank.m ? 0 : Math.max(0, master - p.tokens.m));
+    const finish = points + c.vp >= WIN_SCORE ? 12 : 0;
+    const buy = (c.vp * 5 + c.bonus * (3 + 4 * early) + finish + invested * 0.35) /
+      (1 + wait * 0.7 + scarcity * w.shortage);
+    let evolution = 0;
+    for (const base of bases) {
+      if (base.to !== c.mon) continue;
+      const gap = COLORS.reduce((sum, color) => sum + Math.max(0, (base.need[color] || 0) - bon[color]), 0);
+      const gain = c.vp - base.vp;
+      const finish = points + gain >= WIN_SCORE ? 12 : 0;
+      evolution = Math.max(evolution, (gain * 5 + 4 + finish) * w.evolution / (1 + gap * 1.5));
+    }
+    return { c, value: Math.max(buy, evolution), wait, scarcity, evolution };
+  }).sort((a, b) => b.value - a.value);
+}
+
+function pressureProgress(p, targets, pace) {
+  const points = score(p);
+  const early = Math.max(0, 1 - points / WIN_SCORE);
+  const route = (targets[0]?.value || 0) + 0.32 * (targets[1]?.value || 0) + 0.14 * (targets[2]?.value || 0);
+  const tokens = tokenCount(p);
+  return points * 14 * pace + p.board.reduce((sum, c) => sum + c.bonus, 0) * (4 + 4 * early) +
+    route * 0.64 + p.buried.length * 1.6 + tokens * 0.55 + p.tokens.m * 1.7 - Math.max(0, tokens - 8) * 1.4;
+}
+
+function pressureValue(g, w, rival) {
+  if (g.over) return (g.winner === 1 ? 1 : -1) * (10000 - g.round * 8);
+  const [human, opponent] = g.players;
+  const own = pressureProgress(opponent, pressureTargets(g, opponent, w), w.pace);
+  return own - pressureProgress(human, rival || pressureTargets(g, human, w), 1) * w.rival +
+    (g.finalRound ? (score(opponent) - score(human)) * 32 : 0);
+}
+
+function pressureEvolution(g, w) {
+  const options = evolutions(g);
+  if (!options.length) return null;
+  let best = null;
+  let value = pressureValue(endTurn(clone(g)), w);
+  for (const evo of options) {
+    const next = clone(g);
+    const found = findCard(next, evo.to);
+    // 진화로 보충될 비공개 카드는 선택 근거에서 제외한다.
+    if (found.where === 'market') next.decks[found.tier] = [];
+    applyEvolution(next, evo);
+    const rating = pressureValue(endTurn(next), w);
+    if (rating > value) { best = evo; value = rating; }
+  }
+  return best;
+}
+
+function pressureTurn(g, mv, w) {
+  if (g.turn === 0) return advanceTurn(g, mv, COACH_PROFILE);
+  const next = clone(g);
+  applyMove(next, mv);
+  const evo = pressureEvolution(next, w);
+  if (evo) applyEvolution(next, evo);
+  return endTurn(next);
+}
+
+function pressureDenial(before, after) {
+  let best = null;
+  for (const t of before.slice(0, 3)) {
+    const next = after.find(p => p.c.id === t.c.id);
+    const loss = !next ? 1.7 : next.evolution === next.value ? 0 :
+      Math.max(0, next.wait - t.wait + next.scarcity - t.scarcity);
+    const value = Math.min(1.7, loss) * t.value;
+    if (value > (best?.value || 0)) best = { target: t.c.label, value, taken: !next };
+  }
+  return best;
+}
+
+function pressureChoices(g, w, moves = legalMoves(g)) {
+  const attack = g.turn === 1;
+  const before = attack ? pressureTargets(g, g.players[0], w) : [];
+  const choices = moves.map(mv => {
+    const next = pressureTurn(g, mv, w);
+    const targets = next.over ? [] : pressureTargets(next, next.players[0], w);
+    const denial = attack && !next.over ? pressureDenial(before, targets) : null;
+    const value = pressureValue(next, w, targets);
+    return { mv, next, value, priority: value + (denial?.value || 0) * w.cutoff * 0.27 };
+  });
+  return choices.sort((a, b) => attack ? b.priority - a.priority : a.priority - b.priority);
+}
+
+function pressureForecast({ next, value, priority }, w) {
+  if (next.over) return value;
+  // 상대의 강한 응수 세 가지에 각각 최선의 반격을 찾아 가장 불리한 경우를 본다.
+  let worst = null;
+  for (const reply of pressureChoices(next, w).slice(0, 3)) {
+    const answer = reply.next.over ? reply : pressureChoices(reply.next, w)[0];
+    const rating = answer.next.over ? answer.value : answer.priority * 0.82 + reply.value * 0.18;
+    if (!worst || rating < worst.rating) worst = { rating, next: answer.next };
+  }
+  if (worst.next.over) return worst.rating;
+  // 이후 두 라운드의 득점 경로도 비교해 당장 보기 좋은 견제에만 매달리지 않게 한다.
+  let future = worst.next;
+  for (let ply = 0; ply < 4 && !future.over; ply++) {
+    const moves = future.turn === 1 ? legalMoves(future) : pruned(future, COACH_PROFILE);
+    future = pressureChoices(future, w, moves)[0].next;
+  }
+  const momentum = Math.max(-65, Math.min(65, pressureValue(future, w) - worst.rating));
+  return worst.rating * 0.72 + priority * 0.28 + momentum * 0.55;
+}
+
+function swindlerMove(g) {
+  const moves = legalMoves(g);
+  if (moves.length === 1) return moves[0];
+  const rand = pressureRandom(g);
+  const w = pressureWeights(g);
+  // 같은 후보들을 독립적인 가상 덱 세 개에서 평가한다.
+  const worlds = Array.from({ length: 3 }, () => studyWorld(g, Math.floor(rand() * 1000000)));
+  const rankings = worlds.map(world => new Map(pressureChoices(world, w, moves).map(o => [moveKey(o.mv), o])));
+  const roots = moves.map(mv => {
+    const lines = rankings.map(ranking => ranking.get(moveKey(mv)));
+    return { mv, lines, quick: lines.reduce((sum, line) => sum + line.priority, 0) / worlds.length };
+  }).sort((a, b) => b.quick - a.quick);
+
+  let best = roots[0].mv;
+  let bestValue = -Infinity;
+  for (const root of roots.slice(0, 10)) {
+    const forecasts = root.lines.map(line => pressureForecast(line, w));
+    const average = forecasts.reduce((sum, value) => sum + value, 0) / worlds.length;
+    const rating = average * 0.86 + Math.min(...forecasts) * 0.14 + (rand() - 0.5) * 3;
+    if (rating > bestValue) { best = root.mv; bestValue = rating; }
+  }
+  return best;
+}
+
 function cardGap(p, c, bon = bonuses(p)) {
   const missing = COLORS.reduce((sum, k) => sum + Math.max(0, (c.cost[k] || 0) - bon[k] - p.tokens[k]), 0);
   return Math.max(0, missing + (c.cost.m || 0) - p.tokens.m);
@@ -2204,11 +2373,16 @@ function moveReason(g, mv) {
 }
 
 function studyChoices(g, moves) {
+  if (g.pressure && g.turn === 1) return pressureChoices(g, pressureWeights(g), moves);
   const pid = cur(g).id;
   return moves.map(mv => {
     const next = advanceTurn(g, mv, COACH_PROFILE);
     return { mv, next, value: duelValue(next, pid, COACH_PROFILE) };
   }).sort((a, b) => b.value - a.value);
+}
+
+function trainingTurn(g, mv) {
+  return g.pressure && g.turn === 1 ? pressureTurn(g, mv, pressureWeights(g)) : advanceTurn(g, mv, COACH_PROFILE);
 }
 
 // 상대의 유력한 두 응수 각각에 내 후속 수를 적용한 뒤, 내게 더 불리한 가지를 평가한다.
@@ -2247,14 +2421,15 @@ function makeLesson(g) {
 function rolloutMove(g) {
   const visible = clone(g);
   for (const tier of Object.keys(visible.decks)) visible.decks[tier] = [];
-  const moves = pruned(g, COACH_PROFILE).filter(m => m.type !== 'reserveDeck');
+  const moves = g.pressure && g.turn === 1 ? legalMoves(visible) : pruned(g, COACH_PROFILE).filter(m => m.type !== 'reserveDeck');
+  if (moves[0]?.type === 'pass') return legalMoves(g)[0];
   return moves.length ? studyChoices(visible, moves)[0].mv : legalMoves(g)[0];
 }
 
 function matchSample(g, mv, sample) {
-  let state = advanceTurn(studyWorld(g, sample + STUDY_SAMPLES), mv, COACH_PROFILE);
+  let state = trainingTurn(studyWorld(g, sample + STUDY_SAMPLES), mv);
   for (let ply = 0; ply < 120 && !state.over; ply++) {
-    state = advanceTurn(state, rolloutMove(state), COACH_PROFILE);
+    state = trainingTurn(state, rolloutMove(state));
   }
   return state.over ? (state.winner === cur(g).id ? 'win' : 'loss') : 'unfinished';
 }
@@ -2276,14 +2451,14 @@ async function simulateBroadcast(g, publish, cancelled) {
     opening.count++;
     openings.set(key, opening);
     if (!leader || opening.count > leader.count) leader = opening;
-    let state = advanceTurn(studyWorld(g, 101 + i * 2), first, COACH_PROFILE);
+    let state = trainingTurn(studyWorld(g, 101 + i * 2), first);
     for (let ply = 0; !state.over && ply < 120; ply++) {
       if (performance.now() - sliceStart >= 8) {
         await new Promise(resolve => setTimeout(resolve, 0));
         if (cancelled()) return;
         sliceStart = performance.now();
       }
-      state = advanceTurn(state, rolloutMove(state), COACH_PROFILE);
+      state = trainingTurn(state, rolloutMove(state));
     }
     if (state.over) {
       if (state.winner === pid) wins++;
@@ -2297,6 +2472,10 @@ async function simulateBroadcast(g, publish, cancelled) {
 <script id="broadcast-worker" type="text/plain">
 let requestId = 0;
 self.onmessage = ({ data }) => {
+  if (data.type === 'swindlerMove') {
+    self.postMessage(swindlerMove(data.state));
+    return;
+  }
   requestId = data.id;
   simulateBroadcast(data.state, result => self.postMessage({ id: data.id, result }), () => data.id !== requestId);
 };
@@ -2317,10 +2496,12 @@ let ME = 0;                // 내 플레이어 인덱스
 let pick = [];             // 선택한 토큰 색
 let busy = false;
 let statsRecorded = false;
+const TRAINING_NAMES = { training: '남편격파훈련', swindler: '사기꾼남편격파' };
 let training = null;
+let lastPressureStyle = -1;
 let broadcast = null;
 let resolvingAction = '';
-let broadcastWorkerURL;
+let engineWorkerURL;
 
 function paintOdds(rate) {
   $('#odds-me').textContent = rate === null ? '—' : rate + '%';
@@ -2354,6 +2535,38 @@ function runBroadcastFallback(session) {
     () => session !== broadcast || id !== session.id);
 }
 
+function createEngineWorker() {
+  if (!engineWorkerURL) {
+    const source = ['#game-data', '#game-engine', '#broadcast-worker'].map(selector => $(selector).textContent);
+    engineWorkerURL = URL.createObjectURL(new Blob(source, { type: 'text/javascript' }));
+  }
+  return new Worker(engineWorkerURL);
+}
+
+function requestSwindlerMove(g) {
+  return new Promise(resolve => {
+    let worker;
+    const fallback = () => {
+      worker?.terminate();
+      resolve(swindlerMove(g));
+    };
+    try {
+      worker = createEngineWorker();
+      worker.onmessage = ({ data }) => {
+        worker.terminate();
+        resolve(data);
+      };
+      worker.onerror = event => {
+        event.preventDefault();
+        fallback();
+      };
+      worker.postMessage({ type: 'swindlerMove', state: g });
+    } catch {
+      fallback();
+    }
+  });
+}
+
 function setBroadcast(enabled) {
   broadcast?.worker?.terminate();
   broadcast = null;
@@ -2362,11 +2575,7 @@ function setBroadcast(enabled) {
   const session = { id: 0, worker: null, frame: null };
   broadcast = session;
   try {
-    if (!broadcastWorkerURL) {
-      const source = ['#game-data', '#game-engine', '#broadcast-worker'].map(selector => $(selector).textContent);
-      broadcastWorkerURL = URL.createObjectURL(new Blob(source, { type: 'text/javascript' }));
-    }
-    session.worker = new Worker(broadcastWorkerURL);
+    session.worker = createEngineWorker();
     session.worker.onmessage = ({ data }) => acceptBroadcast(session, data.id, data.result);
     session.worker.onerror = event => {
       event.preventDefault();
@@ -2496,17 +2705,23 @@ function renderRivals() {
 renderRivals();
 renderStats();
 
-function startGame(practice, seed) {
+function startGame(mode = null, seed) {
   const name = $('#myname').value.trim().slice(0, 8) || '나';
+  const swindler = mode === 'swindler';
   const players = [
     newPlayer(0, name, 'human', null),
-    newPlayer(1, LEVEL_NAMES[rivalLevel], 'ai', rivalLevel),
+    newPlayer(1, swindler ? '사기꾼남편' : LEVEL_NAMES[rivalLevel], 'ai', swindler ? 'swindler' : rivalLevel),
   ];
   ME = 0;
   G = newGame({ players, seed });
-  training = practice ? { lesson: null, history: [] } : null;
+  if (swindler) {
+    const styles = PRESSURE_STYLES.map((_, i) => i).filter(i => i !== lastPressureStyle);
+    lastPressureStyle = styles[Math.floor(Math.random() * styles.length)];
+    G.pressure = { style: lastPressureStyle, seed: Math.floor(Math.random() * 4294967296) };
+  }
+  training = mode ? { mode, lesson: null, history: [] } : null;
   resolvingAction = '';
-  setBroadcast(practice);
+  setBroadcast(Boolean(training));
   $('#coach-bar').classList.toggle('hidden', !training);
   statsRecorded = false;
   pick = [];
@@ -2514,7 +2729,7 @@ function startGame(practice, seed) {
   $('#effects').replaceChildren();
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
-  feed(practice ? '코치와 함께 다음 수를 읽어 보세요' : '카드를 누르거나 볼을 선택하세요');
+  feed(training ? '코치와 함께 다음 수를 읽어 보세요' : '카드를 누르거나 볼을 선택하세요');
   playSound('start');
   step();
   const board = $('#board');
@@ -2522,8 +2737,9 @@ function startGame(practice, seed) {
   $('#turn-tag').focus({ preventScroll: true });
 }
 
-$('#start').onclick = () => startGame(false);
-$('#training-start').onclick = () => startGame(true);
+$('#start').onclick = () => startGame();
+$('#training-start').onclick = () => startGame('training');
+$('#swindler-start').onclick = () => startGame('swindler');
 $('#coach-open').onclick = () => showLesson();
 
 $('#how').onclick = showRules;
@@ -2951,7 +3167,7 @@ function showLesson() {
   const header = el('header');
   const close = el('button', 'ghost', '닫기');
   close.onclick = closeModal;
-  header.append(el('h3', '', `남편격파훈련 · ${G.round}라운드`), close);
+  header.append(el('h3', '', `${TRAINING_NAMES[training.mode]} · ${G.round}라운드`), close);
   box.appendChild(header);
   if (last?.opponent) {
     box.append(el('h4', '', '상대 행동과 예상 의도'), el('p', '', last.opponent));
@@ -3044,7 +3260,7 @@ function prepareLesson() {
   const best = training.lesson.options[0];
   const last = training.history.at(-1);
   if (last) last.recovery = best.title;
-  $('#coach-caption').textContent = last?.opponent ? `상대 · ${last.opponent}` : `남편격파훈련 · ${G.round}라운드`;
+  $('#coach-caption').textContent = last?.opponent ? `상대 · ${last.opponent}` : `${TRAINING_NAMES[training.mode]} · ${G.round}라운드`;
   $('#coach-tip').textContent = `${last?.deviation ? '만회 수' : '추천'} · ${best.title}`;
   $('#coach-open').disabled = false;
 }
@@ -3148,7 +3364,9 @@ async function step() {
   busy = true;
   await sleep(motion.matches ? 380 : 670);
   const p = cur(G);
-  const mv = chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
+  const w = G.pressure ? pressureWeights(G) : null;
+  const targets = w ? pressureTargets(G, G.players[ME], w) : null;
+  const mv = w ? await requestSwindlerMove(G) : chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
   const sources = actionSources(mv);
   const action = training ? moveTitle(G, mv) : '';
   const intent = training ? moveReason(G, mv) : '';
@@ -3163,7 +3381,7 @@ async function step() {
   presentMove(p, mv, sources);
   await sleep(motion.matches ? 510 : 770);
 
-  const evo = chooseEvolution(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES + 1) : G);
+  const evo = w ? pressureEvolution(G, w) : chooseEvolution(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES + 1) : G);
   if (evo) {
     const from = p.board.find(card => card.id === evo.from);
     const card = findCard(G, evo.to).card;
@@ -3173,6 +3391,13 @@ async function step() {
     render();
     presentEvolution(p, from, card, points);
     await sleep(motion.matches ? 500 : 740);
+  }
+  if (w) {
+    const denial = pressureDenial(targets, pressureTargets(G, G.players[ME], w));
+    if (denial?.value > 2) {
+      training.history.at(-1).opponent += denial.taken ?
+        ` · ${denial.target} 선점으로 내 계획 차단` : ` · 토큰 공급을 줄여 ${denial.target} 확보 지연`;
+    }
   }
   await finishTurn();
 }
@@ -3264,23 +3489,23 @@ function showResult() {
       `<span><b>누적</b> ${statsText(resultStats.all)}</span>`;
     box.appendChild(summary);
   }
-  const isTraining = Boolean(training);
+  const mode = training?.mode;
   const finishedSeed = G.seed;
-  const again = el('button', 'primary', isTraining ? '새로 시작하기' : '다시 하기');
+  const again = el('button', 'primary', mode ? '새로 시작하기' : '다시 하기');
   again.dataset.sound = 'none';
   again.onclick = () => {
     closeModal();
-    if (!isTraining) return startGame(false);
+    if (!mode) return startGame();
     const now = Date.now();
     // 셔플은 시드의 하위 32비트를 사용하며 0과 1은 같은 배치를 만든다.
     const sameShuffle = (now >>> 0 || 1) === (finishedSeed >>> 0 || 1);
-    startGame(true, sameShuffle ? now + 2 : now);
+    startGame(mode, sameShuffle ? now + 2 : now);
   };
-  const alternate = el('button', 'ghost', isTraining ? '동일한 배치로 다시' : '로비로');
+  const alternate = el('button', 'ghost', mode ? '동일한 배치로 다시' : '로비로');
   alternate.onclick = () => {
-    if (!isTraining) return location.reload();
+    if (!mode) return location.reload();
     closeModal();
-    startGame(true, finishedSeed);
+    startGame(mode, finishedSeed);
   };
   const controls = el('div', 'grid2');
   controls.append(again, alternate);
