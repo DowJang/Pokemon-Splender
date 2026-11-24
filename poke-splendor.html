@@ -171,20 +171,13 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   --ball-size: 21px;
   width: var(--ball-size); height: var(--ball-size); padding: 0; flex: none;
   position: relative; display: inline-grid; place-items: center; vertical-align: middle;
-  border: 1px solid #eef4ff; border-radius: 50%; box-shadow: 0 1px 3px #0007;
-  background-image: var(--ball-mark, linear-gradient(transparent, transparent)),
-    linear-gradient(180deg, var(--ball-color) 44%, #141b28 44% 56%, #f9fbff 56%);
-  background-size: 100% 44%, 100% 100%;
-  background-repeat: no-repeat;
-  color: #fff; font-variant-numeric: tabular-nums;
+  border: 1px solid #eef4ff96; border-radius: 50%;
+  background: var(--ball-color); color: #fff; font-variant-numeric: tabular-nums;
 }
-.ball-count, .pball::before {
-  display: grid; place-items: center; width: 67%; aspect-ratio: 1;
-  border: 1px solid #eef4ff; border-radius: 50%; background: #141b28;
-  font-size: max(8px, calc(var(--ball-size) * .45)); line-height: 1; font-weight: 850;
+.ball-token:is(.y, .p) { color: #24152b; }
+.ball-count {
+  font-size: max(8px, calc(var(--ball-size) * .57)); line-height: 1; font-weight: 850;
 }
-.pball { --ball-size: 15px; }
-.pball::before { content: ''; width: 38%; background: #f9fbff; border-color: #141b28; }
 
 /* ── 상·하단 플레이어 상태 ────────────────────────────── */
 .player-dock {
@@ -269,7 +262,6 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 /* ── 은행 ──────────────────────────────────────────── */
 .bank { display: flex; justify-content: center; gap: 4px; padding: 2px 6px; background: var(--bg2); border-top: 1px solid var(--line); flex: none; }
-.tok .badge { position: absolute; top: -4px; right: -2px; background: var(--acc); color: #241c00; border-radius: 9px; font-size: 10px; padding: 0 5px; font-weight: 800; }
 
 /* ── 내 조작 ──────────────────────────────────────── */
 .dock-controls { grid-area: controls; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; }
@@ -280,11 +272,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 }
 .picks { display: flex; gap: 3px; flex: none; }
 .picks:empty { display: none; }
-.picks .pip { position: relative; }
-.picks .pip::after {
-  content: '×'; position: absolute; top: -6px; right: -5px; width: 13px; height: 13px;
-  background: #000c; color: #fff; border-radius: 50%; font-size: 10px; line-height: 13px; text-align: center;
-}
+.picks .pip { --ball-size: 15px; }
 .dock-controls .btns { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: 4px; }
 .dock-controls .btns button {
   min-width: 28px; min-height: 28px; padding: 3px 7px; font-size: 11px; border-radius: 6px; line-height: 1.25; white-space: nowrap;
@@ -327,7 +315,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .detail-score strong { color: var(--acc); font-size: 35px; line-height: 1; }
 .detail-score em { margin-left: 3px; color: var(--ink); font-size: 15px; font-style: normal; font-weight: 800; }
 .detail-bonus div { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
-.detail-bonus .pball { width: 25px; height: 25px; flex: none; }
+.detail-bonus .ball-token { --ball-size: 25px; }
 .detail-section { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line); }
 .detail-section h4 { margin: 0 0 9px; color: #fff; font-size: 13px; }
 .detail-chips { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -554,24 +542,22 @@ button:disabled { cursor: default; }
 }
 .rowwrap {
   --rail: #76e0d1;
-  display: grid; grid-template-columns: clamp(35px, 11.5vw, 73px) minmax(0, 1fr);
+  display: grid; grid-template-columns: 19px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr); min-height: 0; min-width: 0;
-  gap: 5px; padding: 3px 5px; border: 1px solid #3f5272; border-radius: 8px;
+  gap: 4px; padding: 3px 5px; border: 1px solid #3f5272; border-radius: 8px;
   background: linear-gradient(160deg, color-mix(in srgb, var(--rail) 13%, #111e33), #101d33c9 55%);
   box-shadow: inset 2px 0 color-mix(in srgb, var(--rail) 65%, transparent);
 }
 .rowwrap.rare-row { --rail: #ffdb87; }
 .rowwrap.tier-3 { --rail: #c5a9ff; }
 .rowwrap.tier-2 { --rail: #91c8ff; }
-.rowlabel { display: grid; align-content: center; justify-items: start; gap: 3px; padding-left: 2px; }
-.rowlabel strong { color: var(--rail); font-size: clamp(9px, 2.5vw, 13px); font-weight: 850; line-height: 1.12; white-space: nowrap; }
-.rare-row .rowlabel strong { white-space: normal; word-break: keep-all; }
-.deck-button {
-  padding: 3px 5px; border: 1px solid #4a6383; border-radius: 6px; color: #ecf3ff;
-  background: #1d304a; font-size: 10px; line-height: 1.25; white-space: nowrap;
+.row-count {
+  align-self: start; display: grid; place-items: center; min-height: 19px; padding: 1px;
+  border: 1px solid #4a6383; border-radius: 5px; color: var(--rail); background: #14243a;
+  font-size: 10px; font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums;
 }
 .deck-button:hover:enabled { border-color: var(--rail); background: #2e4663; }
-.deck-button:disabled { color: #b2c1da; background: #111d31; border-color: #374966; }
+.deck-button:disabled { background: #111d31; border-color: #374966; }
 .card {
   --base: #e8f0fb;
   --cost-size: clamp(13px, min(4.2vw, 3.2dvh), 26px);
@@ -620,6 +606,17 @@ button:disabled { cursor: default; }
 .player-dock .evo-preview, .player-dock .evo-label .ball-token { width: 12px; height: 12px; }
 .player-dock .evo-label { padding-block: 0; }
 .player-dock .bonus-count { font-size: 9px; }
+.detail-heading:has(.evo-label) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center; gap: 5px; padding-inline: clamp(12px, 4vw, 20px);
+}
+.detail-heading:has(.evo-label) .detail-title { grid-area: 1 / 1; min-width: 0; }
+.detail-heading:has(.evo-label) h3 { display: block; font-size: clamp(18px, 5.6vw, 26px); line-height: 1.12; overflow-wrap: anywhere; }
+.detail-heading:has(.evo-label) .detail-stage { display: inline-block; margin: 4px 0 0; vertical-align: baseline; }
+.detail-heading .detail-kicker { overflow-wrap: anywhere; }
+.detail-heading .evo-label { gap: 5px; padding: 4px 6px; border: 1px solid #ffffff63; border-radius: 8px; }
+.detail-heading .evo-preview { width: clamp(28px, 8vw, 42px); padding: 2px; }
+.detail-heading .evo-label .ball-token { --ball-size: clamp(22px, 5vw, 29px); }
 .market-body {
   flex: 1; min-height: 0;
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch;
@@ -652,8 +649,7 @@ button:disabled { cursor: default; }
   .card .cost { --coin-size: 10px; display: flex; align-items: center; gap: 1px; padding-inline: 1px; }
 }
 .card .coin { --ball-size: var(--coin-size); }
-.card .coin .ball-count { width: 76%; border-width: 0; font-size: max(8px, calc(var(--ball-size) * .5)); }
-.card .coin.paid .ball-count { text-decoration: line-through; color: #b2bfd1; }
+.card .coin.paid .ball-count { text-decoration: line-through; }
 .card .nm { padding: 0 2px 1px; background: #f3f7fe; }
 .card .pill { padding: 1px; background: transparent; border-radius: 0; font-size: clamp(9px, 2.55vw, 13px); font-weight: 900; }
 
@@ -669,8 +665,7 @@ button:disabled { cursor: default; }
 .tok.pickable { box-shadow: 0 0 0 2px #7be9c47f, 0 3px 7px #000d; }
 .tok.is-picked { box-shadow: 0 0 0 2px var(--acc), 0 0 14px #ffd86d68; }
 .tok:hover:enabled { transform: translateY(-2px); }
-.tok.dead .ball-count { color: #b2bfd1; }
-.tok .badge { z-index: 2; top: -5px; right: -5px; font-size: 10px; }
+.tok.dead { opacity: .7; }
 .picks button.pip { padding: 0; min-width: 15px; }
 
 .modal { background: #030810ba; backdrop-filter: blur(5px); }
@@ -710,10 +705,8 @@ button:disabled { cursor: default; }
   position: absolute; top: 0; left: 0; pointer-events: none;
 }
 .fx-orb {
-  width: 20px; height: 20px; margin: -10px; border: 1px solid #fff; border-radius: 50%; color: var(--fx);
-  background: radial-gradient(circle at 34% 30%, #fff 0 9%, transparent 33%),
-    linear-gradient(180deg, var(--fx) 45%, #142034 46% 54%, #f7fbff 55%);
-  box-shadow: 0 0 10px #fff9, 0 0 19px currentColor;
+  --ball-size: 20px; margin: -10px;
+  box-shadow: 0 0 10px #fff9, 0 0 19px var(--fx);
 }
 .fx-spark, .fx-confetti {
   height: 6px; width: 6px; margin: -3px; border-radius: 2px;
@@ -762,7 +755,7 @@ button:disabled { cursor: default; }
 .action-popup .old-art { width: 37px; height: 38px; opacity: .75; }
 .action-popup .fx-arrow { color: var(--fx); font-size: 17px; }
 .action-popup .fx-balls { display: flex; gap: 4px; }
-.action-popup .fx-balls .pball { --ball-size: 18px; }
+.action-popup .fx-balls .ball-token { --ball-size: 18px; }
 .action-popup .fx-seal { font-size: 23px; color: var(--fx); }
 .action-popup.is-evolution img:not(.old-art) { animation: evolve-art .55s cubic-bezier(.12,.8,.32,1) both; }
 .card-dealt { animation: card-dealt .34s cubic-bezier(.18,.76,.22,1) both; }
@@ -855,14 +848,13 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 }
 @media (max-width: 540px) {
   .player-dock { padding-inline: 5px; gap: 3px 6px; }
-  .dock-resources .pip, .picks .pball { --ball-size: clamp(12px, 3.6vw, 16px); }
+  .dock-resources .pip, .picks .pip { --ball-size: clamp(12px, 3.6vw, 16px); }
   .resource-values { gap: 1px; }
   .resource-name { font-size: 9px; gap: 3px; }
   .dock-score small { font-size: 9px; }
   .dock-controls .btns button { padding-inline: 5px; }
   #status { font-size: 10px; }
   .rowwrap { padding: 2px 3px; gap: 3px; border-radius: 6px; }
-  .deck-button { font-size: 9px; padding: 2px; }
   .card .ribbon { padding-inline: 2px; }
   .evo-label { padding-inline: 2px; gap: 1px; }
   .card .cost { padding-inline: 2px 1px; gap: 1px; }
@@ -1051,10 +1043,10 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
       </aside>
     </div>
     <div id="board" class="board" aria-label="포켓몬 시장">
-      <section class="rowwrap rare-row" aria-labelledby="label-special"><div class="rowlabel"><strong id="label-special" aria-label="희귀·전설·환상">희귀·전설</strong></div><div class="cards" id="row-special"></div></section>
-      <section class="rowwrap tier-3" aria-labelledby="label-3"><div class="rowlabel"><strong id="label-3">3단계</strong><button class="deck-button" id="deck-3" data-focus="deck-3" data-sound="none" type="button"></button></div><div class="cards" id="row-3"></div></section>
-      <section class="rowwrap tier-2" aria-labelledby="label-2"><div class="rowlabel"><strong id="label-2">2단계</strong><button class="deck-button" id="deck-2" data-focus="deck-2" data-sound="none" type="button"></button></div><div class="cards" id="row-2"></div></section>
-      <section class="rowwrap tier-1" aria-labelledby="label-1"><div class="rowlabel"><strong id="label-1">1단계</strong><button class="deck-button" id="deck-1" data-focus="deck-1" data-sound="none" type="button"></button></div><div class="cards" id="row-1"></div></section>
+      <section class="rowwrap rare-row" aria-label="희귀·전설·환상"><span class="row-count" id="deck-special"></span><div class="cards" id="row-special"></div></section>
+      <section class="rowwrap tier-3" aria-label="3단계"><button class="row-count deck-button" id="deck-3" data-focus="deck-3" data-sound="none" type="button"></button><div class="cards" id="row-3"></div></section>
+      <section class="rowwrap tier-2" aria-label="2단계"><button class="row-count deck-button" id="deck-2" data-focus="deck-2" data-sound="none" type="button"></button><div class="cards" id="row-2"></div></section>
+      <section class="rowwrap tier-1" aria-label="1단계"><button class="row-count deck-button" id="deck-1" data-focus="deck-1" data-sound="none" type="button"></button><div class="cards" id="row-1"></div></section>
     </div>
     <section id="bank" class="bank" aria-labelledby="bank-label"><strong id="bank-label">볼 은행</strong><div class="bank-pool"></div></section>
   </main>
@@ -2833,18 +2825,20 @@ function pip(color, n, cls = '') {
   return `<span class="ball-token pip ${color} ${cls}" data-color="${color}" role="img" aria-label="${label}" title="${label}"><span class="ball-count">${n}</span></span>`;
 }
 
-function pball(color) {
-  return `<span class="ball-token pball ${color}" aria-hidden="true"></span>`;
-}
-
 function tokenPips(amounts, cls = '') {
   return ALL_COLORS.filter(color => amounts[color] > 0).map(color => pip(color, amounts[color], cls)).join('');
 }
 
+function evolutionBadge(c) {
+  const next = c.need && DEX[c.to];
+  if (!next) return '';
+  const name = next.label || c.to;
+  return `<span class="evo-label" title="진화 대상 · ${name}"><img class="evo-preview" src="${spriteUrl(next.dex)}" loading="lazy" alt="${name}">${tokenPips(c.need)}</span>`;
+}
+
 function cardRibbon(c, canShowEvolution = true) {
-  const next = canShowEvolution && c.need ? DEX[c.to] : null;
   return `<span class="ribbon"><span class="vp">${c.vp}</span>` +
-    (next ? `<span class="evo-label" title="${next.label || c.to}(으)로 진화"><img class="evo-preview" src="${spriteUrl(next.dex)}" loading="lazy" alt="${next.label || c.to}">${tokenPips(c.need)}</span>` : '') +
+    (canShowEvolution ? evolutionBadge(c) : '') +
     (c.bonus > 1 ? `<span class="bonus-count">×${c.bonus}</span>` : '') + '</span>';
 }
 
@@ -2852,6 +2846,13 @@ function evolutionSummary(c) {
   if (!c.to || !c.need) return '';
   const conditions = Object.entries(c.need).map(([color, amount]) => `${BALL[color].name} 보너스 ${amount}`).join(', ');
   return ` · ${DEX[c.to].label || c.to}(으)로 진화 · ${conditions}`;
+}
+
+function cardDetailHeading(c, kicker) {
+  const stage = c.tier === 'R' ? '희귀' : c.tier === 'L' ? '전설·환상' : `${c.tier}단계`;
+  return `<div class="detail-heading"><div class="detail-title">
+    <span class="detail-kicker">${kicker}</span><h3>${c.label}</h3><span class="detail-stage">${stage}</span>
+    </div>${evolutionBadge(c)}</div>`;
 }
 
 function cardNode(c) {
@@ -2901,7 +2902,7 @@ function collectionCardNode(c, opts = {}) {
 /** 손패/획득 카드의 모든 정보를 중앙 팝업으로 크게 보여준다. */
 function showCardDetail(c, opts = {}) {
   const wrap = el('section', `card-detail fam-${c.color}`);
-  const stageName = c.tier === 'R' ? '희귀' : c.tier === 'L' ? '전설·환상' : `${c.tier}단계`;
+  const kind = opts.kept ? '찜한 카드' : '획득 카드';
   const costRows = Object.entries(c.cost || {}).filter(([, amount]) => amount).map(([color, amount]) =>
     `<span class="detail-chip ${color}">${pip(color, amount)}<b>${BALL[color].name}</b></span>`
   ).join('');
@@ -2911,16 +2912,12 @@ function showCardDetail(c, opts = {}) {
 
   wrap.innerHTML = `
     <button class="detail-close" type="button" aria-label="닫기">×</button>
-    <div class="detail-heading">
-      <span class="detail-kicker">${opts.owner || ''}${opts.kept ? ' · 찜한 카드' : ' · 획득 카드'}</span>
-      <h3>${c.label}</h3>
-      <span class="detail-stage">${stageName}</span>
-    </div>
+    ${cardDetailHeading(c, kind)}
     <div class="detail-main">
       <div class="detail-art"><img src="${spriteUrl(c.dex)}" alt="${c.label}"></div>
       <div class="detail-stats">
         <div class="detail-score"><span>카드 점수</span><strong>${c.vp}</strong><em>점</em></div>
-        <div class="detail-bonus"><span>영구 보너스</span><div>${pball(c.color)}<strong>${BALL[c.color].name} × ${c.bonus}</strong></div></div>
+        <div class="detail-bonus"><span>영구 보너스</span><div>${pip(c.color, c.bonus)}<strong>${BALL[c.color].name}</strong></div></div>
       </div>
     </div>
     <div class="detail-section">
@@ -2938,6 +2935,7 @@ function showCardDetail(c, opts = {}) {
         : '<span class="detail-none">더 이상 진화하지 않는 카드입니다.</span>'}
     </div>
     ${opts.actionable ? '<button class="primary detail-action" type="button">이 카드로 행동하기</button>' : ''}`;
+  if (opts.owner) wrap.querySelector('.detail-kicker').textContent = opts.owner + ' · ' + kind;
   wrap.querySelector('.detail-close').onclick = closeModal;
   const action = wrap.querySelector('.detail-action');
   if (action) action.onclick = () => { closeModal(); onCardTap(c); };
@@ -3019,7 +3017,7 @@ function renderBank(interactive) {
       button.id = 'bank-' + color;
       button.dataset.focus = button.id;
       button.dataset.sound = 'none';
-      button.append(el('span', 'ball-count tok-count'), el('span', 'badge hidden'));
+      button.appendChild(el('span', 'ball-count tok-count'));
       if (color !== 'm') button.onclick = () => onTokenTap(color);
       const slot = el('div', 'bank-slot');
       const label = el('span', 'bank-token-label', BALL[color].name);
@@ -3038,9 +3036,6 @@ function renderBank(interactive) {
     button.classList.toggle('is-picked', picks > 0);
     button.classList.toggle('dead', !amount);
     button.querySelector('.tok-count').textContent = amount;
-    const badge = button.querySelector('.badge');
-    badge.textContent = '+' + picks;
-    badge.classList.toggle('hidden', !picks);
     button.setAttribute('aria-label', BALL[color].name + ' ' + amount + '개' + (picks ? ' · ' + picks + '개 선택' : ''));
     button.setAttribute('aria-pressed', String(picks > 0));
     button.title = color === 'm' ? '찜할 때 마스터볼을 받습니다' : button.getAttribute('aria-label');
@@ -3078,15 +3073,20 @@ function render() {
   renderCollection('#rival-kept', rival.hand, { side: 'rival', owner: rival.name, kept: true, showEvolution: true });
 
   renderMarketRow('#row-special', [...G.market.L, ...G.market.R], interactive, me, meBonus);
+  const specialDeck = $('#deck-special');
+  const specialLeft = G.decks.L.length + G.decks.R.length;
+  specialDeck.textContent = specialLeft;
+  specialDeck.title = '남은 카드 ' + specialLeft + '장';
+  specialDeck.setAttribute('aria-label', specialDeck.title);
   for (const tier of [3, 2, 1]) {
     const slots = G.market[tier];
     renderMarketRow('#row-' + tier, slots.length ? slots : [null], interactive, me, meBonus);
     const deck = $('#deck-' + tier);
     const left = G.decks[tier].length;
     deck.disabled = !interactive || !left || me.hand.length >= HAND_LIMIT;
-    deck.textContent = '덱 ' + left;
+    deck.textContent = left;
     deck.setAttribute('aria-label', tier + '단계 덱에서 찜 · 남은 카드 ' + left + '장');
-    deck.title = deck.getAttribute('aria-label');
+    deck.title = '덱 찜 · 남은 카드 ' + left + '장';
     deck.onclick = () => reserveFromDeck(tier);
   }
   renderBank(interactive);
@@ -3103,7 +3103,8 @@ function render() {
 
   const picks = $('#picks');
   picks.replaceChildren(...pick.map((color, index) => {
-    const button = el('button', 'ball-token pball pip ' + color);
+    const button = el('button', 'ball-token pip ' + color);
+    button.appendChild(el('span', 'ball-count', 1));
     button.type = 'button';
     button.dataset.sound = 'none';
     button.disabled = !interactive;
@@ -3181,14 +3182,12 @@ function onCardTap(c) {
   const inHand = me.hand.some(card => card.id === c.id);
   const pay = payment(me, c);
   const reservable = !inHand && typeof c.tier === 'number' && me.hand.length < HAND_LIMIT;
-  const stage = c.tier === 'L' ? '전설·환상' : c.tier === 'R' ? '희귀' : c.tier + '단계';
   const tokens = tokenPips(c.cost);
   const paid = pay && tokenPips(pay);
   const box = el('section', 'card-detail card-action fam-' + c.color);
   box.innerHTML =
     '<button class="detail-close" type="button" aria-label="닫기">×</button>' +
-    '<div class="detail-heading"><span class="detail-kicker">' + (inHand ? '찜한 카드' : '시장의 포켓몬') + '</span>' +
-    '<h3>' + c.label + '</h3><span class="detail-stage">' + stage + '</span></div>' +
+    cardDetailHeading(c, inHand ? '찜한 카드' : '시장의 포켓몬') +
     '<div class="detail-main"><div class="detail-art"></div><div class="card-action-info">' +
     '<div><strong>' + c.vp + '점</strong> · ' + BALL[c.color].name + ' 보너스 ×' + c.bonus + '</div>' +
     '<div>획득 비용 ' + (tokens || '없음') + '</div>' +
@@ -3918,8 +3917,8 @@ function showAction({ label, title, detail, color, card, from, balls, kind }) {
     portrait.appendChild(imageOf(card));
     cue.appendChild(portrait);
   }
-  if (balls?.length) cue.appendChild(el('span', 'fx-balls', balls.map(ball => pball(ball)).join('')));
-  if (!card && !balls?.length) cue.appendChild(el('span', 'fx-seal', '✦'));
+  if (balls) cue.appendChild(el('span', 'fx-balls', tokenPips(balls)));
+  if (!card && !balls) cue.appendChild(el('span', 'fx-seal', '✦'));
 
   const text = el('div');
   const heading = el('strong');
@@ -4006,8 +4005,9 @@ function foilBlast(point, color, accent) {
   burst(point, accent, 9, 142, 135, '#fff4ca');
 }
 
-function fling(from, to, color, delay = 0) {
+function fling(from, to, ball, delay = 0, amount = 1) {
   if (!from || !to || motion.matches) return;
+  const color = EFFECT_COLOR[ball];
   const arc = { x: (from.x + to.x) / 2 + 28, y: (from.y + to.y) / 2 - 17 };
   const travel = [
     { transform: fxAt(from, 'scale(.82)'), opacity: 0 },
@@ -4018,7 +4018,7 @@ function fling(from, to, color, delay = 0) {
   for (const offset of [34, 68]) {
     fxPiece('fx-trail', color, travel, { duration, delay: delay + offset, easing: 'ease-in-out' });
   }
-  fxPiece('fx-orb', color, travel, { duration, delay, easing: 'ease-in-out' });
+  fxPiece('ball-token fx-orb ' + ball, color, travel, { duration, delay, easing: 'ease-in-out' }, el('b', 'ball-count', amount));
   burst(to, color, 3, 22, delay + duration - 70, '#fff1ac');
 }
 
@@ -4092,17 +4092,17 @@ function presentMove(player, mv, sources) {
     case 'take3': {
       const balls = mv.type === 'take2' ? [mv.color, mv.color] : mv.colors;
       balls.forEach((color, i) => {
-        fling(sources.bank[color], target, EFFECT_COLOR[color], i * 58);
+        fling(sources.bank[color], target, color, i * 58);
         burst(sources.bank[color], EFFECT_COLOR[color], 5, 27, i * 44, '#fff3b4');
       });
-      event = { title: '볼 ' + balls.length + '개 획득', balls, kind: 'coin', color: own ? '#8debd1' : '#c7a9ff' };
+      event = { title: '볼 ' + balls.length + '개 획득', balls: moveBalls(G, mv), kind: 'coin', color: own ? '#8debd1' : '#c7a9ff' };
       break;
     }
     case 'reserve':
     case 'reserveDeck': {
       const card = sources.card || player.hand.at(-1);
       const master = sources.master > G.bank.m;
-      if (master) fling(sources.bank.m, target, EFFECT_COLOR.m);
+      if (master) fling(sources.bank.m, target, 'm');
       flyCard(sources.from, player, card, EFFECT_COLOR.m, true);
       burst(sources.from || target, EFFECT_COLOR.m, 10, 48, 0, '#b7e5ff');
       event = { title: card.label + ' 찜', card, detail: master ? '마스터볼 +1' : '', kind: 'reserve', color: EFFECT_COLOR.m };
@@ -4114,7 +4114,7 @@ function presentMove(player, mv, sources) {
       const color = rare ? '#ffe18d' : EFFECT_COLOR[card.color];
       flyCard(from, player, card, color);
       burst(from || target, color, rare ? 17 : 13, rare ? 82 : 63, 0, '#ffe96c');
-      ALL_COLORS.filter(ball => paid[ball]).forEach((ball, i) => fling(target, sources.bank[ball], EFFECT_COLOR[ball], 90 + i * 47));
+      ALL_COLORS.filter(ball => paid[ball]).forEach((ball, i) => fling(target, sources.bank[ball], ball, 90 + i * 47, paid[ball]));
       pulseScore(player, score(player) - points, color);
       event = { title: card.label + ' 포획!', detail: scoreNote(points, player) || '영구 보너스 +' + card.bonus, card, kind: rare ? 'rare' : 'card', color };
       break;
