@@ -17,7 +17,7 @@
   --dim: #97a3bd;
   --acc: #ffcb3d;
   --ok: #46c37b;
-  --r: #e8443a; --b: #2f86d6; --y: #f0b429; --p: #f2a0c0; --k: #2b2b31; --m: #7b46c4;
+  --r: #f12c32; --b: #1864f1; --y: #ffd320; --p: #f12d83; --k: #282d37; --m: #852aeb;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --rival-dock-h: calc(116px + var(--safe-t));
@@ -123,7 +123,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; align-content: start; }
 .cards .card { width: 100%; min-width: 0; max-width: 120px; justify-self: center; }
 
-/* ── 카드 ── 실물 카드 구도: 색 리본 → (진화예고) → 흰 아트 → 코인 스택 → 이름 알약 */
+/* ── 카드 ──────────────────────────────────────────── */
 .card {
   position: relative; border-radius: 10px; overflow: hidden;
   background: #eef0f4; border: 1px solid #0002;
@@ -135,82 +135,36 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .card.sel { transform: translateY(-3px) scale(1.03); box-shadow: 0 6px 16px #000a, 0 0 0 2px var(--acc); z-index: 3; }
 .card.empty { background: transparent; border-style: dashed; border-color: var(--line); opacity: .3; box-shadow: none; }
 
-.card .ribbon {
-  flex: none; display: flex; align-items: center; justify-content: space-between;
-  padding: 3px 5px; min-height: 20%;
-}
-.card.fam-r .ribbon { background: linear-gradient(180deg, #f2564a, var(--r)); }
-.card.fam-b .ribbon { background: linear-gradient(180deg, #4a9ce0, var(--b)); }
-.card.fam-y .ribbon { background: linear-gradient(180deg, #f7c95a, var(--y)); }
-.card.fam-p .ribbon { background: linear-gradient(180deg, #f6b8d2, var(--p)); }
-.card.fam-k .ribbon { background: linear-gradient(180deg, #3d3d45, var(--k)); }
-.card .ribbon .vp { font-size: 16px; font-weight: 900; color: #fff; text-shadow: 0 1px 1px #0006; line-height: 1; }
-.card .ribbon .balls { display: flex; gap: 2px; }
-
-.card .evorow {
-  flex: none; display: flex; align-items: center; gap: 4px; padding: 2px 5px;
-  background: #d9dce4;
-}
-.card .evorow img.evomini { width: 15px; height: 15px; object-fit: contain; }
-.card .evobadge {
-  display: inline-flex; align-items: center; gap: 1px; padding: 0 4px 0 6px; height: 15px;
-  font-size: 10px; font-weight: 800; color: #fff;
-  clip-path: polygon(14% 0, 100% 0, 100% 100%, 14% 100%, 0 50%);
-}
-.card .evobadge.r { background: var(--r); } .card .evobadge.b { background: var(--b); }
-.card .evobadge.y { background: var(--y); color: #3a2c00; } .card .evobadge.p { background: var(--p); color: #5b2340; }
-.card .evobadge.k { background: var(--k); color: var(--acc); }
-
-.card .art { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f4f5f8; position: relative; }
-.card .art img { width: 86%; height: 86%; object-fit: contain; }
-
-.card .cost { position: absolute; left: 4px; bottom: 17px; display: flex; flex-direction: column; gap: 3px; z-index: 2; }
-.coin {
-  width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 10px; font-weight: 800; border: 1.5px solid #fff9; box-shadow: 0 1px 2px #0007;
-}
-.coin.r { background: var(--r); color: #fff; } .coin.b { background: var(--b); color: #fff; }
-.coin.y { background: var(--y); color: #3a2c00; } .coin.p { background: var(--p); color: #5b2340; }
-.coin.k { background: var(--k); color: var(--acc); } .coin.m { background: var(--m); color: #fff; }
-.coin.paid { opacity: .35; }
-
 .card .nm { flex: none; display: flex; justify-content: center; padding: 3px 4px 4px; background: #f4f5f8; }
 .pill {
   display: inline-block; max-width: 100%; padding: 1px 8px; border-radius: 999px;
   background: #fff; font-size: 9px; font-weight: 700; color: #2a2f3a;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1.5px solid;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.pill.fam-r { border-color: var(--r); } .pill.fam-b { border-color: var(--b); }
-.pill.fam-y { border-color: var(--y); } .pill.fam-p { border-color: var(--p); }
-.pill.fam-k { border-color: var(--k); }
 
-/* CSS로 그린 포켓볼 아이콘 — 실물 카드 우상단의 볼 로고 대신 */
-.pball {
-  --edge: #1c1c1c;
-  width: 14px; height: 14px; border-radius: 50%; position: relative; flex: none;
-  border: 1px solid var(--edge); box-shadow: 0 1px 1px #0005;
-  background: linear-gradient(180deg, var(--top, #ccc) 48%, var(--edge) 48%, var(--edge) 52%, #fff 52%);
+/* 카드, 볼 은행, 보유 볼, 코치가 같은 색과 계수 표기를 사용한다. */
+.r, .fam-r { --ball-color: var(--r); }
+.b, .fam-b { --ball-color: var(--b); }
+.y, .fam-y { --ball-color: var(--y); }
+.p, .fam-p { --ball-color: var(--p); }
+.k, .fam-k { --ball-color: var(--k); }
+.m { --ball-color: var(--m); }
+.ball-token {
+  --ball-size: 21px;
+  width: var(--ball-size); height: var(--ball-size); padding: 0; flex: none;
+  position: relative; display: inline-grid; place-items: center; vertical-align: middle;
+  border: 1px solid #eef4ff; border-radius: 50%; box-shadow: 0 1px 3px #0007;
+  background: linear-gradient(180deg, var(--ball-color) 44%, #141b28 44% 56%, #f9fbff 56%);
+  color: #fff; font-variant-numeric: tabular-nums;
 }
-.pball::after {
-  content: ''; position: absolute; left: 50%; top: 50%; width: 40%; height: 40%;
-  background: #fff; border: 1.4px solid var(--edge); border-radius: 50%; transform: translate(-50%, -50%);
+.ball-count, .pball::before {
+  display: grid; place-items: center; width: 67%; aspect-ratio: 1;
+  border: 1px solid #eef4ff; border-radius: 50%; background: #141b28;
+  font-size: max(9px, calc(var(--ball-size) * .42)); line-height: 1; font-weight: 850;
 }
-.pball.tiny { width: 10px; height: 10px; }
-.pball.r { --top: var(--r); } .pball.b { --top: var(--b); } .pball.y { --top: var(--y); }
-.pball.p { --top: var(--p); } .pball.k { --top: var(--k); } .pball.m { --top: var(--m); }
-
-.pip {
-  width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 10px; font-weight: 800; border: 1px solid #0006;
-}
-.pip.sm { width: 14px; height: 14px; font-size: 9px; }
-.pip.r { background: var(--r); color: #fff; }
-.pip.b { background: var(--b); color: #fff; }
-.pip.y { background: var(--y); color: #3a2c00; }
-.pip.p { background: var(--p); color: #5b2340; }
-.pip.k { background: var(--k); color: var(--acc); }
-.pip.m { background: var(--m); color: #fff; }
-.pip.paid { opacity: .32; text-decoration: line-through; }
+.pball { --ball-size: 15px; }
+.pball::before { content: ''; width: 38%; background: #f9fbff; border-color: #141b28; }
+.pip.sm { --ball-size: 17px; }
 
 /* ── 상·하단 고정 카드 현황 ─────────────────────────── */
 .player-dock {
@@ -270,44 +224,22 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   color: #66728a; border: 1px dashed #48546c; border-radius: 7px; font-size: 9px;
 }
 .collection-card {
-  --family: #888;
   position: relative; flex: 0 0 43px; width: 43px; height: 56px; padding: 0;
+  display: grid; grid-template-rows: 24px minmax(0, 1fr) 11px;
   overflow: hidden; border: 1px solid #0005; border-radius: 7px;
-  background: linear-gradient(180deg, var(--family) 0 16px, #eef0f4 16px);
+  background: #eef0f4;
   color: #232935; box-shadow: 0 1px 3px #0008; text-align: left;
 }
-.collection-card.fam-r { --family: var(--r); }
-.collection-card.fam-b { --family: var(--b); }
-.collection-card.fam-y { --family: var(--y); }
-.collection-card.fam-p { --family: var(--p); }
-.collection-card.fam-k { --family: var(--k); }
 button.collection-card { cursor: pointer; }
 button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
 .collection-card img {
-  position: absolute; left: 7px; top: 16px; width: 30px; height: 29px; object-fit: contain;
+  align-self: center; justify-self: center; width: 75%; height: 85%; min-height: 0; object-fit: contain;
 }
-.collection-card.has-evo { flex-basis: 62px; width: 62px; height: 60px; }
-.collection-card.has-evo img { left: 20px; top: 16px; width: 22px; height: 22px; }
-.collection-vp {
-  position: absolute; z-index: 2; left: 3px; top: 2px;
-  color: #fff; font-size: 9px; line-height: 1; font-weight: 900; text-shadow: 0 1px 1px #0008;
-}
-.collection-bonus { position: absolute; z-index: 2; right: 2px; top: 1px; display: flex; gap: 1px; }
-.collection-bonus .pball { width: 10px; height: 10px; }
+.collection-card.has-evo { flex-basis: 65px; width: 65px; height: 60px; }
 .collection-name {
-  position: absolute; z-index: 2; inset: auto 2px 1px;
-  overflow: hidden; color: #252b35; font-size: 7px; font-weight: 800;
+  overflow: hidden; color: #252b35; font-size: 8px; font-weight: 800;
   line-height: 10px; text-align: center; text-overflow: ellipsis; white-space: nowrap;
 }
-.collection-evo {
-  position: absolute; z-index: 2; inset: auto 2px 10px;
-  display: flex; align-items: center; justify-content: center; gap: 2px;
-  height: 10px; color: #424b5e; font-size: 6px; font-weight: 800; white-space: nowrap;
-}
-.evo-label { color: #59667f; letter-spacing: -.3px; }
-.evo-need { display: inline-flex; align-items: center; gap: 1px; color: #252c39; }
-.evo-need .pball { width: 9px; height: 9px; }
-.evo-need b { font-size: 8px; line-height: 1; }
 .kept-card { box-shadow: 0 0 0 2px #a875e8, 0 2px 5px #0009; }
 .kept-card::after {
   content: ''; position: absolute; z-index: 3; right: 2px; bottom: 2px;
@@ -316,13 +248,8 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 /* ── 은행 ──────────────────────────────────────────── */
 .bank { display: flex; justify-content: center; gap: 4px; padding: 2px 6px; background: var(--bg2); border-top: 1px solid var(--line); flex: none; }
-.tok { flex: 1; max-width: 32px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 12px; border: 1.5px solid #0004; position: relative; }
-.tok.pickable { box-shadow: 0 0 0 2px var(--ok); }
-.tok.dead { opacity: .28; }
+.tok { --ball-size: 35px; }
 .tok .badge { position: absolute; top: -4px; right: -2px; background: var(--acc); color: #241c00; border-radius: 9px; font-size: 10px; padding: 0 5px; font-weight: 800; }
-.tok.r { background: var(--r); color: #fff; } .tok.b { background: var(--b); color: #fff; }
-.tok.y { background: var(--y); color: #3a2c00; } .tok.p { background: var(--p); color: #5b2340; }
-.tok.k { background: var(--k); color: var(--acc); } .tok.m { background: var(--m); color: #fff; }
 
 /* ── 내 영역 — 상태·확정/취소를 한 줄에 압축 ─────────── */
 .me-head {
@@ -398,10 +325,8 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .detail-chip { display: flex; align-items: center; gap: 6px; padding: 7px 9px; border: 2px solid var(--chip); border-radius: 10px; background: #0e1421; }
 .detail-chip.r { --chip: var(--r); } .detail-chip.b { --chip: var(--b); }
 .detail-chip.y { --chip: var(--y); } .detail-chip.p { --chip: var(--p); }
-.detail-chip.k { --chip: #888; } .detail-chip.m { --chip: var(--m); }
-.detail-chip .pball { width: 20px; height: 20px; flex: none; }
+.detail-chip.k { --chip: var(--k); } .detail-chip.m { --chip: var(--m); }
 .detail-chip b { color: #e7ecf7; font-size: 11px; }
-.detail-chip strong { color: var(--acc); font-size: 14px; }
 .evolution-route { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; color: var(--ink); font-size: 13px; }
 .evolution-route b { color: var(--acc); font-size: 19px; }
 .evolution-route img { width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: #edf0f5; }
@@ -425,7 +350,6 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 @media (min-width: 620px) {
   .cards { gap: 7px; }
   .collection-card { flex-basis: 47px; width: 47px; height: 60px; }
-  .collection-card img { left: 8px; width: 31px; height: 32px; }
 }
 
 @media (max-width: 420px) {
@@ -433,22 +357,15 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   .detail-heading { margin: -15px -15px 12px; padding: 15px 52px 12px 15px; }
   .detail-heading h3 { font-size: 23px; }
   .detail-main { grid-template-columns: 40% 1fr; gap: 10px; }
-  .detail-art { min-height: 132px; }
-  .detail-art img { height: 126px; }
   .detail-score, .detail-bonus { padding: 9px; }
   .detail-chip { padding: 6px 7px; }
 }
 
 @media (max-height: 560px) {
   :root { --rival-dock-h: calc(102px + var(--safe-t)); --me-dock-h: calc(108px + var(--safe-b)); }
-  .dock-meta, .dock-stat em, .me-mid { display: none; }
+  .dock-meta, .dock-stat em { display: none; }
   .collection-strip { min-height: 52px; max-height: 52px; }
   .collection-card { flex-basis: 38px; width: 38px; height: 48px; }
-  .collection-card img { left: 6px; top: 14px; width: 26px; height: 25px; }
-  .collection-card.has-evo { flex-basis: 56px; width: 56px; height: 50px; }
-  .collection-card.has-evo img { left: 18px; top: 14px; width: 20px; height: 19px; }
-  .collection-evo { bottom: 9px; }
-  .collection-name { font-size: 6px; }
 }
 
 #training-start { color: #a8dbff; border-color: #5588ad; }
@@ -457,13 +374,11 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 #coach-bar small, #coach-bar strong { display: block; line-height: 1.4; }
 #coach-caption { color: #b4d1e4; font-size: 11px; }
 #coach-tip { font-size: 13px; }
-#coach-open { padding: 7px 10px; flex: none; font-size: 12px; }
+#coach-open, #rival-intent { padding: 5px 8px; flex: none; font-size: 12px; min-height: 32px; }
 .lesson { word-break: keep-all; overflow-wrap: anywhere; }
 .lesson header { display: flex; align-items: center; justify-content: space-between; }
 .lesson header h3 { margin: 0; }
 .lesson header button { padding: 6px 12px; }
-.lesson .coach-recommend { background: #20384c; border-left: 3px solid #87ceff; padding: 10px 12px; margin: 12px 0; }
-.lesson .coach-recommend strong { display: block; color: #cbeaff; font-size: 16px; }
 .lesson h4 { margin: 13px 0 4px; }
 .lesson p { margin: 4px 0; }
 .lesson select { width: 100%; margin: 6px 0; padding: 9px; color: var(--ink); background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; font: inherit; }
@@ -639,8 +554,9 @@ button:disabled { cursor: default; }
 #coach-caption, #coach-tip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #coach-caption { color: #a8d6da; }
 #coach-open { color: #d0fff2; background: #214c50; border-color: #498a84; font-weight: 750; }
-#coach-open:disabled { opacity: .5; }
-.lesson .coach-recommend { border-color: var(--arena); background: #1c3949; border-radius: 8px; }
+#rival-intent { color: #ffefd4; border-color: #b38a53; background: #3b2d2d; font-weight: 750; }
+#rival-intent[aria-pressed="true"] { color: #211608; border-color: #ffe8a9; background: #ffd46a; }
+#coach-open:disabled, #rival-intent:disabled { opacity: .5; }
 .lesson details, .result-screen details { padding: 8px 10px; border-radius: 8px; background: #0d1a2e; }
 .result-screen summary { color: var(--arena); cursor: pointer; }
 
@@ -666,37 +582,50 @@ button:disabled { cursor: default; }
 .cards { gap: 6px; }
 .cards .card { max-width: 132px; }
 .card {
-  --family: #88a1bf;
   --base: #e8f0fb;
-  border: 1px solid color-mix(in srgb, var(--family) 80%, #b8d2e8);
+  --cost-size: 30px;
+  border: 1px solid color-mix(in srgb, var(--ball-color, #88a1bf) 80%, #b8d2e8);
   border-radius: 8px; aspect-ratio: var(--card-ratio); background: #e9f0fa;
   padding: 0; line-height: 1; box-shadow: 0 2px 5px #0009; text-align: left;
 }
-.card.fam-r { --family: #d73c45; --base: #ffe7e4; }
-.card.fam-b { --family: #276bbc; --base: #dbeaff; }
-.card.fam-y { --family: #ab6f10; --base: #fff2c7; }
-.card.fam-p { --family: #b9477c; --base: #ffe5f1; }
-.card.fam-k { --family: #41455d; --base: #e9eafa; }
+.card:not(.empty) { min-height: calc(2 * var(--cost-size) + 48px); }
+.card.fam-r { --base: #ffe7e4; }
+.card.fam-b { --base: #dbeaff; }
+.card.fam-y { --base: #fff2c7; }
+.card.fam-p { --base: #ffe5f1; }
+.card.fam-k { --base: #e9eafa; }
 .card.buy { outline: 2px solid var(--ok); outline-offset: 0; box-shadow: 0 0 13px #67ffb65c; }
 .card:not(.empty):enabled:hover, .card:not(.empty):focus-visible {
   transform: translateY(-2px); z-index: 2; outline: 2px solid var(--acc); box-shadow: 0 5px 15px #0009;
 }
 .card.empty { opacity: .55; }
-.card[class*="fam-"] .ribbon {
-  justify-content: space-between; min-height: 16%; padding: 2px 5px;
-  background: linear-gradient(100deg, var(--family), color-mix(in srgb, var(--family) 82%, #fff));
+.ribbon {
+  flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding-inline: 4px; min-width: 0; background: var(--ball-color);
 }
-.card .ribbon .vp { font-size: clamp(11px, 2.8vw, 15px); line-height: 1.15; }
-.card .ribbon .pball { width: 11px; height: 11px; }
-.card .evorow {
-  position: absolute; z-index: 3; top: 20%; right: 3px; padding: 1px;
-  gap: 1px; border-radius: 10px; background: #f6f8ffde; box-shadow: 0 1px 3px #213b5d45;
+.card .ribbon { height: 24%; min-height: 25px; }
+.ribbon .vp, .ribbon .bonus-count {
+  font-weight: 900; color: white; line-height: 1; text-shadow: 0 1px 2px #000, 0 0 3px #000;
 }
-.card .evorow img.evomini { width: 13px; height: 13px; }
-.card .evobadge { height: 13px; padding-left: 4px; font-size: 9px; }
-.card .evobadge .pball { width: 8px; height: 8px; }
+.ribbon .vp { grid-column: 1; grid-row: 1; }
+.ribbon .bonus-count { grid-column: 3; grid-row: 1; justify-self: end; font-size: 11px; }
+.card .ribbon .vp { font-size: clamp(12px, 2.8vw, 16px); }
+.evo-label {
+  grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; justify-content: center;
+  gap: 3px; padding: 2px 4px; border-radius: 5px; background: #131e33; color: #fff;
+  font-size: clamp(10px, 2.8vw, 14px); line-height: 1; font-weight: 900; white-space: nowrap;
+}
+.evo-label .ball-token { --ball-size: 18px; }
+.collection-card .ribbon { padding-inline: 3px; font-size: 10px; }
+.collection-card .evo-label { gap: 2px; padding-inline: 3px; font-size: 10px; }
+.collection-card .evo-label .ball-token { --ball-size: 15px; }
+.market-body {
+  flex: 1; min-height: calc(2 * var(--cost-size) + 4px);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch;
+  background: #f3f7fe;
+}
 .card .art {
-  min-height: 0;
+  min-height: 0; min-width: 0; display: grid; place-items: center; overflow: hidden;
   background:
     radial-gradient(ellipse at 58% 73%, #ffffff 5%, transparent 46%),
     linear-gradient(133deg, transparent 48%, #ffffff92 49%, transparent 59%),
@@ -706,10 +635,14 @@ button:disabled { cursor: default; }
   background: repeating-conic-gradient(from 18deg at 63% 56%, #fff9 0 9deg, transparent 11deg 26deg),
     radial-gradient(ellipse at 58% 55%, #fff 4%, var(--base) 50%, #d7c5f1);
 }
-.card .art img { width: 86%; height: 94%; margin-left: 10%; filter: drop-shadow(0 3px 2px #0f1f3d4d); }
-.card .cost { left: 3px; bottom: 19px; gap: 1px; }
-.card .coin { width: 15px; height: 15px; font-size: 9px; border-color: #fff; }
-.card .coin.paid { opacity: .54; text-decoration: line-through; }
+.card .art img { width: 78%; height: 80%; min-height: 0; object-fit: contain; filter: drop-shadow(0 3px 2px #0f1f3d4d); }
+.card .cost {
+  display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, var(--cost-size));
+  place-content: center; gap: 2px; padding-inline: 3px 2px;
+}
+.card .cost:has(> :only-child) { grid-template-rows: var(--cost-size); }
+.card .coin { --ball-size: var(--cost-size); }
+.card .coin.paid .ball-count { text-decoration: line-through; color: #b2bfd1; }
 .card .nm { padding: 1px 2px 2px; background: #f3f7fe; }
 .card .pill { padding: 1px 4px; border: 0; background: transparent; border-radius: 0; font-size: clamp(9px, 2.55vw, 12px); font-weight: 900; }
 
@@ -719,24 +652,11 @@ button:disabled { cursor: default; }
 }
 .bank > strong { color: #e3edff; font-size: 11px; white-space: nowrap; }
 .bank-pool { display: flex; justify-content: center; gap: clamp(7px, 2.1vw, 15px); }
-.tok[class] {
-  --token: #8593ac;
-  width: 35px; max-width: none; flex: none; padding: 0; border: 1px solid #edf3ff91;
-  background: radial-gradient(circle at 32% 17%, #fff8, transparent 34%),
-    linear-gradient(180deg, var(--token) 45%, #162034 46% 53%, color-mix(in srgb, var(--token) 25%, #fff) 55%);
-  box-shadow: inset 0 -2px #1224433d, 0 3px 5px #0009;
-}
-.tok.r { --token: #e25353; } .tok.b { --token: #5295ea; }
-.tok.y { --token: #ecb743; } .tok.p { --token: #f7a5cb; }
-.tok.k { --token: #656883; } .tok.m { --token: #af78f2; margin-left: 3px; }
-.tok-count {
-  display: grid; place-items: center; width: 19px; height: 19px; border: 1px solid #c1d2ea; border-radius: 100%;
-  background: #142239; color: #fff; font-size: 11px; line-height: 1;
-}
+.tok.m { margin-left: 3px; }
 .tok.pickable { box-shadow: 0 0 0 2px #7be9c47f, 0 3px 7px #000d; }
 .tok.is-picked { box-shadow: 0 0 0 2px var(--acc), 0 0 14px #ffd86d68; }
 .tok:hover:enabled { transform: translateY(-2px); }
-.tok.dead { opacity: .45; }
+.tok.dead .ball-count { color: #b2bfd1; }
 .tok .badge { z-index: 2; top: -5px; right: -5px; font-size: 10px; }
 .picks button.pip { padding: 0; min-width: 15px; }
 
@@ -747,7 +667,8 @@ button:disabled { cursor: default; }
 .modal-in h3 { font-size: 21px; }
 .modal-in .grid2 > button { min-height: 39px; }
 .detail-art { background: radial-gradient(ellipse at 50% 55%, #f7fdff 8%, #d7e8fa 63%, #a3bedb); }
-.detail-art img { padding: 7px; }
+.detail-art { min-height: 100px; }
+.detail-art img { height: 100px; padding: 9px; }
 .card-action-info { margin: 0; min-width: 0; }
 .card-action-info > div { margin: 5px 0; color: var(--dim); font-size: 12px; }
 .card-action-info strong { color: var(--ink); }
@@ -792,7 +713,7 @@ button:disabled { cursor: default; }
 .action-popup .old-art { width: 37px; height: 38px; opacity: .75; }
 .action-popup .fx-arrow { color: var(--fx); font-size: 17px; }
 .action-popup .fx-balls { display: flex; gap: 4px; }
-.action-popup .fx-balls .pball { width: 18px; height: 18px; }
+.action-popup .fx-balls .pball { --ball-size: 18px; }
 .action-popup .fx-seal { font-size: 23px; color: var(--fx); }
 .action-popup.is-evolution img:not(.old-art) { animation: evolve-art .55s cubic-bezier(.12,.8,.32,1) both; }
 .card-dealt { animation: card-dealt .34s cubic-bezier(.18,.76,.22,1) both; }
@@ -812,18 +733,25 @@ button:disabled { cursor: default; }
   .rowlabel { display: flex; align-items: center; justify-content: space-between; padding-left: 3px; min-height: 16px; }
   .rowlabel strong { font-size: 10px; }
   .deck-button { padding: 2px 5px; font-size: 9px; }
-  .card .cost { bottom: 15px; }
+  .card { --cost-size: 24px; }
+  #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
+  .cards:not(#row-special):has(.cost > :nth-child(3)) .card {
+    min-height: calc(3 * var(--cost-size) + 50px);
+  }
+  .cards:not(#row-special):has(.cost > :nth-child(4)) .card {
+    min-height: calc(4 * var(--cost-size) + 58px);
+  }
+  .cards:not(#row-special) .cost:has(> :nth-child(3)) { grid-template-rows: repeat(3, var(--cost-size)); }
+  .cards:not(#row-special) .cost:has(> :nth-child(4)) { grid-template-rows: repeat(4, var(--cost-size)); }
   .bank { gap: 7px; min-height: 51px; }
   .bank > strong { font-size: 10px; }
-  .tok { width: clamp(28px, 8.5vw, 35px); }
+  .tok { --ball-size: clamp(28px, 8.5vw, 35px); }
   .collection-row { gap: 7px; }
 }
 @media (max-width: 370px) {
   .dock-summary { gap: 4px; }
   .dock-meta { display: none; }
-  .card .coin { width: 13px; height: 13px; }
-  .card .cost { left: 2px; }
-  .card .evorow img.evomini { display: none; }
+  .card .cost { padding-inline: 2px 1px; }
   .bank-pool { gap: 6px; }
   #status { font-size: 9px; }
   .me-head .btns button { min-width: 33px; padding-inline: 4px; }
@@ -831,7 +759,7 @@ button:disabled { cursor: default; }
 @media (max-height: 560px) {
   :root { --rival-dock-h: calc(94px + var(--safe-t)); --me-dock-h: calc(103px + var(--safe-b)); }
   .bank { min-height: 43px; padding-block: 4px; }
-  .tok { width: 29px; }
+  .tok { --ball-size: 29px; }
   .rowwrap { min-height: 86px; }
   .action-popup { top: max(118px, 28vh); }
 }
@@ -848,7 +776,6 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 .rare-row .rowlabel strong { font-size: 11px; word-break: keep-all; }
 .collection-card.evo-ready { outline: 1px solid #d1aeff; box-shadow: 0 0 8px #d1aeff77; }
 #coach-bar > div { flex: 1; }
-#coach-open { min-height: 32px; }
 #modal .sound-control { margin-top: 12px; }
 .match-log p { margin: 4px 0; }
 .action-popup { overflow: hidden; isolation: isolate; }
@@ -874,24 +801,16 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   .rival .seg button:last-child:nth-child(3n+1) { grid-column: auto; }
 }
 @media (max-height: 760px) and (min-width: 541px) {
-  .cards .card { max-width: clamp(82px, calc((100dvh - 338px) / 4 * var(--card-ratio)), 132px); }
+  .cards .card { max-width: clamp(100px, calc((100dvh - 338px) / 4 * var(--card-ratio)), 132px); }
 }
 @media (max-height: 560px) {
-  :root { --rival-dock-h: calc(84px + var(--safe-t)); --me-dock-h: calc(89px + var(--safe-b)); }
+  :root { --rival-dock-h: calc(84px + var(--safe-t)); --me-dock-h: calc(107px + var(--safe-b)); }
   .collection-strip { min-height: 41px; max-height: 41px; }
   .collection-card, .collection-card.has-evo, .empty-collection { height: 38px; }
-  .collection-card img, .collection-card.has-evo img { top: 9px; height: 20px; }
-  .collection-evo { display: none; }
+  .collection-card { grid-template-rows: 20px minmax(0, 1fr) 10px; }
   .rowwrap { min-height: 74px; }
 }
 
-@media (max-width: 540px) {
-  .card .cost { bottom: 14px; }
-  .card .coin { width: 12px; height: 12px; font-size: 8px; }
-}
-@media (max-width: 370px) {
-  .rare-row .card .cost { display: grid; grid-template-columns: repeat(2, 12px); }
-}
 .broadcast {
   flex: none; margin: 0 8px 4px; padding: 6px 10px; border: 1px solid #40546b;
   border-radius: 9px; background: #101d30; font-variant-numeric: tabular-nums;
@@ -917,10 +836,56 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   .playfield:has(#broadcast:not(.hidden)) #coach-bar { align-self: start; }
   .playfield:has(#broadcast:not(.hidden)) .bank { grid-row: 4; }
   .playfield:has(#broadcast:not(.hidden)) .board { grid-area: 1 / 2 / -1 / 3; }
+  .playfield:has(#broadcast:not(.hidden)) .rowwrap { grid-template-columns: 1fr; gap: 3px; padding-inline: 5px; }
+  .playfield:has(#broadcast:not(.hidden)) .rowlabel { display: flex; align-items: center; justify-content: space-between; }
+  .playfield:has(#broadcast:not(.hidden)) .cards .card { max-width: 132px; }
+  .playfield:has(#broadcast:not(.hidden)) #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
 }
 @media (max-height: 560px) {
   .broadcast { margin-bottom: 2px; padding-block: 2px; }
   .odds-line strong { font-size: 12px; }
+}
+.lesson header { gap: 8px; }
+.lesson-mode { color: var(--dim); font-size: 12px; }
+.lesson-pick {
+  display: grid; gap: 7px; margin-top: 12px; padding: 10px 12px;
+  border: 1px solid #4b9d92; border-radius: 10px; background: #182f42;
+}
+.lesson-pick > small { color: #9cf6dc; font-size: 12px; font-weight: 750; }
+.lesson-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.lesson-tile {
+  display: flex; align-items: center; gap: 7px; min-width: 0; padding: 6px;
+  border: 1px solid #415878; border-radius: 8px; background: #111e32;
+}
+.lesson-tile[class*="fam-"] {
+  border-left: 3px solid var(--ball-color);
+}
+.lesson-tile img {
+  width: 40px; height: 40px; flex: none; object-fit: contain; padding: 2px;
+  border-radius: 6px; background: #dce9f5;
+}
+.lesson-pick .lesson-tile img { width: 58px; height: 58px; }
+.lesson-tile strong { display: block; color: #f1f6ff; line-height: 1.25; overflow-wrap: anywhere; }
+.lesson-tile small { color: #b6c9e3; font-size: 11px; }
+.lesson-balls { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; margin-top: 4px; }
+.lesson-balls .ball-token { --ball-size: 22px; }
+.lesson-branch { display: grid; gap: 4px; }
+.lesson-branch > small { color: #adc6e4; }
+.lesson .sample { margin-bottom: 4px; }
+.lesson .sample-result:empty { display: none; }
+.intent-mark, .card.buy.intent-mark, .card:not(.empty).intent-mark:hover, .card:not(.empty).intent-mark:focus-visible {
+  outline: 3px solid #ffe269; outline-offset: -2px; filter: brightness(1.12);
+  animation: intent-pulse 1s ease-in-out 3;
+}
+.intent-mark.tok { outline-offset: 2px; }
+@keyframes intent-pulse {
+  50% { outline-color: #fff; filter: brightness(1.32); }
+}
+@media (max-width: 370px) {
+  #coach-bar { gap: 5px; padding-inline: 7px; }
+  #coach-open, #rival-intent { padding-inline: 6px; }
+  .lesson-tile { padding: 5px; gap: 4px; }
+  .lesson-tile img { width: 34px; height: 34px; }
 }
 </style>
 </head>
@@ -1007,7 +972,8 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
     </aside>
     <aside id="coach-bar" class="hidden" aria-label="훈련 코치">
       <div aria-live="polite"><small id="coach-caption"></small><strong id="coach-tip"></strong></div>
-      <button id="coach-open" class="ghost">수 읽기</button>
+      <button id="coach-open" class="ghost" type="button" disabled>수 읽기</button>
+      <button id="rival-intent" class="ghost" type="button" aria-pressed="false" disabled>상대의도</button>
     </aside>
     <div id="board" class="board" aria-label="포켓몬 시장">
       <section class="rowwrap rare-row" aria-labelledby="label-special"><div class="rowlabel" id="label-special"><strong>전설·환상 / 희귀</strong></div><div class="cards" id="row-special"></div></section>
@@ -1062,12 +1028,12 @@ const COLORS = ['r', 'b', 'y', 'p', 'k'];
 const ALL_COLORS = ['r', 'b', 'y', 'p', 'k', 'm'];
 
 const BALL = {
-  r: { name: '몬스터볼', hex: '#e8443a', ink: '#fff' },
-  b: { name: '슈퍼볼', hex: '#2f86d6', ink: '#fff' },
-  y: { name: '퀵볼', hex: '#f0b429', ink: '#3a2c00' },
-  p: { name: '힐볼', hex: '#f2a0c0', ink: '#5b2340' },
-  k: { name: '하이퍼볼', hex: '#2b2b31', ink: '#ffd34d' },
-  m: { name: '마스터볼', hex: '#7b46c4', ink: '#fff' },
+  r: { name: '몬스터볼' },
+  b: { name: '슈퍼볼' },
+  y: { name: '퀵볼' },
+  p: { name: '힐볼' },
+  k: { name: '하이퍼볼' },
+  m: { name: '마스터볼' },
 };
 
 // 포켓몬 도감: 이름 → {dex, stage, family(보너스색), evolvesTo, evoNeed}
@@ -2026,14 +1992,14 @@ function duelPlayout(g, pid, w, plies) {
 }
 
 // ── 수 선택 ───────────────────────────────────────────────────
-function chooseMove(g) {
+function chooseMove(g, predict = false) {
   const p = cur(g);
   const w = prof(p);
   const moves = legalMoves(g);
   if (moves.length === 1) return moves[0];
 
   // 초보자는 가끔 아무 수나 고른다 (단, 살 수 있으면 사는 편)
-  if (w.blunder && Math.random() < w.blunder) {
+  if (!predict && w.blunder && Math.random() < w.blunder) {
     const buys = moves.filter((m) => m.type === 'buy');
     const pool = buys.length && Math.random() < 0.5 ? buys : moves;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -2092,7 +2058,7 @@ function chooseMove(g) {
     return top[0].mv;
   }
 
-  if (w.noise) for (const o of scored) o.v += (Math.random() - 0.5) * w.noise;
+  if (!predict && w.noise) for (const o of scored) o.v += (Math.random() - 0.5) * w.noise;
   scored.sort((a, b) => b.v - a.v);
   return scored[0].mv;
 }
@@ -2258,7 +2224,7 @@ function pressureDenial(before, after) {
     const loss = !next ? 1.7 : next.evolution === next.value ? 0 :
       Math.max(0, next.wait - t.wait + next.scarcity - t.scarcity);
     const value = Math.min(1.7, loss) * t.value;
-    if (value > (best?.value || 0)) best = { target: t.c.label, value, taken: !next };
+    if (value > (best?.value || 0)) best = { id: t.c.id, target: t.c.label, value, taken: !next };
   }
   return best;
 }
@@ -2336,15 +2302,51 @@ function cardTargets(g, p) {
   }).sort((a, b) => b.value - a.value);
 }
 
-function targetText({ c, gap }, p) {
+function moveBalls(g, mv, card) {
+  if (mv.type === 'take2') return { [mv.color]: 2 };
+  if (mv.type === 'take3') return Object.fromEntries(mv.colors.map(color => [color, 1]));
+  if (mv.type === 'buy') return payment(cur(g), card);
+  return mv.type.startsWith('reserve') && g.bank.m ? { m: 1 } : {};
+}
+
+function collectionTarget(g, mv) {
+  const p = cur(g);
+  const after = clone(g);
+  applyMove(after, mv);
+  const actor = cur(after);
+  const targets = g.pressure && g.turn === 1 ? pressureTargets(after, actor, pressureWeights(g)) : cardTargets(after, actor);
   const bon = bonuses(p);
-  const costs = ALL_COLORS.map(k => {
-    const n = (c.cost[k] || 0) - bon[k] - p.tokens[k];
-    return n > 0 ? BALL[k].name + ' ' + n : '';
-  }).filter(Boolean);
-  const wild = Math.max(0, p.tokens.m - (c.cost.m || 0));
-  const need = gap ? costs.join('·') + ' 필요' + (wild ? ` (보유 마스터볼로 ${wild}개 대체 가능)` : '') : '지금 잡을 수 있음';
-  return `${c.label} (${c.vp}점) · ${need}`;
+  return targets.find(({ c }) => cardGap(actor, c, bon) < cardGap(p, c, bon))?.c;
+}
+
+function movePreview(g, mv) {
+  const card = mv.id ? findCard(g, mv.id).card : null;
+  return { type: mv.type, card, balls: moveBalls(g, mv, card), title: moveTitle(g, mv) };
+}
+
+function predictRivalIntent(g) {
+  const board = clone(g);
+  board.turn = 1;
+  const mv = board.pressure ? swindlerMove(board) : chooseMove(studyWorld(board, STUDY_SAMPLES + MATCH_SAMPLES), true);
+  const { card, balls, title } = movePreview(board, mv);
+  const taking = mv.type === 'take2' || mv.type === 'take3';
+  const target = taking ? collectionTarget(board, mv) : card;
+  const cards = target ? [target.id] : [];
+  let denial = null;
+  if (taking && board.pressure) {
+    const w = pressureWeights(board);
+    const after = clone(board);
+    applyMove(after, mv);
+    denial = pressureDenial(pressureTargets(board, board.players[0], w), pressureTargets(after, after.players[0], w));
+    if (denial?.value > 2 && !cards.includes(denial.id)) cards.push(denial.id);
+  }
+  let label = taking && target ? target.label + ' 준비' : title;
+  if (denial?.value > 2) label += ' · ' + denial.target + ' 견제';
+  return { label, cards, colors: ALL_COLORS.filter(color => balls[color] > 0), tier: mv.tier };
+}
+
+function runOpponentTask(g, type) {
+  return type === 'rivalIntent' ? predictRivalIntent(g) : swindlerMove(g);
 }
 
 function moveReason(g, mv) {
@@ -2395,9 +2397,9 @@ function studyLine(world, mv) {
     const recovery = reply.next.over ? null : studyChoices(reply.next, pruned(reply.next, COACH_PROFILE))[0];
     const end = recovery?.next || reply.next;
     return {
-      reply: moveTitle(after, reply.mv),
+      reply: movePreview(after, reply.mv),
       replyKey: moveKey(reply.mv),
-      response: recovery ? moveTitle(reply.next, recovery.mv) : '',
+      response: recovery ? movePreview(reply.next, recovery.mv) : null,
       scores: `${score(end.players[pid])} 대 ${score(end.players[1 - pid])}`,
       result: end.over ? (end.winner === pid ? '승리' : '패배') : '',
       value: duelValue(end, pid, COACH_PROFILE)
@@ -2472,8 +2474,8 @@ async function simulateBroadcast(g, publish, cancelled) {
 <script id="broadcast-worker" type="text/plain">
 let requestId = 0;
 self.onmessage = ({ data }) => {
-  if (data.type === 'swindlerMove') {
-    self.postMessage(swindlerMove(data.state));
+  if (data.type) {
+    self.postMessage(runOpponentTask(data.state, data.type));
     return;
   }
   requestId = data.id;
@@ -2543,12 +2545,13 @@ function createEngineWorker() {
   return new Worker(engineWorkerURL);
 }
 
-function requestSwindlerMove(g) {
-  return new Promise(resolve => {
+function requestOpponentTask(g, type) {
+  return new Promise((resolve, reject) => {
     let worker;
     const fallback = () => {
       worker?.terminate();
-      resolve(swindlerMove(g));
+      try { resolve(runOpponentTask(g, type)); }
+      catch (error) { reject(error); }
     };
     try {
       worker = createEngineWorker();
@@ -2560,7 +2563,7 @@ function requestSwindlerMove(g) {
         event.preventDefault();
         fallback();
       };
-      worker.postMessage({ type: 'swindlerMove', state: g });
+      worker.postMessage({ type, state: g });
     } catch {
       fallback();
     }
@@ -2741,18 +2744,36 @@ $('#start').onclick = () => startGame();
 $('#training-start').onclick = () => startGame('training');
 $('#swindler-start').onclick = () => startGame('swindler');
 $('#coach-open').onclick = () => showLesson();
+$('#rival-intent').onclick = toggleRivalIntent;
 
 $('#how').onclick = showRules;
 $('#menu').onclick = showMenu;
 
 // ── 렌더 ──────────────────────────────────────────────────────
 function pip(color, n, cls = '') {
-  return `<span class="pip ${color} ${cls}">${n}</span>`;
+  const label = `${BALL[color].name} ${n}개`;
+  return `<span class="ball-token pip ${color} ${cls}" data-color="${color}" role="img" aria-label="${label}" title="${label}"><span class="ball-count">${n}</span></span>`;
 }
 
-/** 실물 카드 우상단의 '볼' 아이콘 — CSS만으로 그린 포켓볼 모양 */
-function pball(color, cls = '') {
-  return `<span class="pball ${color} ${cls}"></span>`;
+function pball(color) {
+  return `<span class="ball-token pball ${color}" aria-hidden="true"></span>`;
+}
+
+function tokenPips(amounts, cls = '') {
+  return ALL_COLORS.filter(color => amounts[color] > 0).map(color => pip(color, amounts[color], cls)).join('');
+}
+
+function cardRibbon(c, canShowEvolution = true) {
+  const evo = canShowEvolution && c.to && c.need;
+  return `<span class="ribbon"><span class="vp">${c.vp}</span>` +
+    (evo ? `<span class="evo-label">진화${tokenPips(c.need)}</span>` : '') +
+    (c.bonus > 1 ? `<span class="bonus-count">×${c.bonus}</span>` : '') + '</span>';
+}
+
+function evolutionSummary(c) {
+  if (!c.to || !c.need) return '';
+  const conditions = Object.entries(c.need).map(([color, amount]) => `${BALL[color].name} 보너스 ${amount}`).join(', ');
+  return ` · ${DEX[c.to].label || c.to}(으)로 진화 · ${conditions}`;
 }
 
 function cardNode(c) {
@@ -2765,43 +2786,11 @@ function cardNode(c) {
   n.dataset.focus = cardFocus(c);
   n.onclick = () => onCardTap(c);
 
-  // ── 상단 색 리본: 실물 카드처럼 승점 + 볼 아이콘(보너스 1이면 1개, 2면 2개)
-  const ribbon = el('div', 'ribbon');
-  ribbon.innerHTML =
-    `<span class="vp">${c.vp || ''}</span>` +
-    `<span class="balls">${pball(c.color)}${c.bonus === 2 ? pball(c.color) : ''}</span>`;
-  n.appendChild(ribbon);
-
-  // ── 진화 예고 배지: 다음 단계 미니 아이콘 + 필요 보너스(오각형 배지)
-  if (c.to && c.need) {
-    const row = el('div', 'evorow');
-    const k = Object.keys(c.need)[0];
-    row.innerHTML =
-      `<img class="evomini" src="${spriteUrl(DEX[c.to].dex)}" loading="lazy" alt="">` +
-      `<span class="evobadge ${k}">${c.need[k]}${pball(k, 'tiny')}</span>`;
-    n.appendChild(row);
-  }
-
-  // ── 카드 일러스트
-  const art = el('div', 'art');
-  const img = el('img');
-  img.src = spriteUrl(c.dex);
-  img.alt = c.label;
-  img.loading = 'lazy';
-  art.appendChild(img);
-  n.appendChild(art);
-
-  // ── 좌하단에 겹쳐지는 비용 코인 스택
-  const cost = el('div', 'cost');
-  for (const k of ['m', ...COLORS]) {
-    const v = c.cost[k];
-    if (!v) continue;
-    cost.appendChild(el('span', 'coin ' + k, v));
-  }
-  n.appendChild(cost);
-
-  // ── 바닥의 색 테두리 이름 알약
-  n.appendChild(el('div', 'nm', `<span class="pill fam-${c.color}">${c.label}</span>`));
+  n.innerHTML = cardRibbon(c) +
+    `<span class="market-body"><span class="cost">${tokenPips(c.cost, 'coin')}</span>` +
+    '<span class="art"><img loading="lazy" alt=""></span></span>' +
+    `<span class="nm"><span class="pill">${c.label}</span></span>`;
+  n.querySelector('img').src = spriteUrl(c.dex);
 
   return n;
 }
@@ -2814,22 +2803,11 @@ function collectionCardNode(c, opts = {}) {
   n.type = 'button';
   n.dataset.card = c.id;
   n.dataset.focus = (opts.kept ? 'kept-' : 'owned-') + opts.side + '-' + c.id;
-  const evolutionTitle = evolution
-    ? ` · 진화 조건 ${Object.entries(c.need).map(([color, amount]) => `${BALL[color].name} 보너스 ${amount}`).join(', ')}`
-    : '';
   const canEvolve = opts.evolutionIds?.has(c.id);
   n.classList.toggle('evo-ready', Boolean(canEvolve));
-  n.title = `${c.label} · ${c.vp}점 · ${BALL[c.color].name} 보너스 ${c.bonus}${evolutionTitle}${canEvolve ? ' · 진화 가능' : ''}`;
+  n.title = `${c.label} · ${c.vp}점 · ${BALL[c.color].name} 보너스 ${c.bonus}${evolution ? evolutionSummary(c) : ''}${canEvolve ? ' · 진화 가능' : ''}`;
   n.setAttribute('aria-label', n.title);
-  const evolutionBadge = evolution
-    ? `<span class="collection-evo"><span class="evo-label">진화→</span>${Object.entries(c.need).map(([color, amount]) =>
-        `<span class="evo-need ${color}">${pball(color, 'tiny')}<b>${amount}</b></span>`).join('')}</span>`
-    : '';
-  n.innerHTML =
-    `<span class="collection-vp">${c.vp}</span>` +
-    `<span class="collection-bonus">${pball(c.color)}${c.bonus === 2 ? pball(c.color) : ''}</span>` +
-    '<img loading="lazy" alt="">' +
-    evolutionBadge +
+  n.innerHTML = cardRibbon(c, Boolean(evolution)) + '<img loading="lazy" alt="">' +
     `<span class="collection-name">${c.label}</span>`;
   n.querySelector('img').src = spriteUrl(c.dex);
   n.onclick = () => showCardDetail(c, {
@@ -2846,10 +2824,10 @@ function showCardDetail(c, opts = {}) {
   const wrap = el('section', `card-detail fam-${c.color}`);
   const stageName = c.tier === 'R' ? '희귀' : c.tier === 'L' ? '전설·환상' : `${c.tier}단계`;
   const costRows = Object.entries(c.cost || {}).filter(([, amount]) => amount).map(([color, amount]) =>
-    `<span class="detail-chip ${color}">${pball(color)}<b>${BALL[color].name}</b><strong>${amount}개</strong></span>`
+    `<span class="detail-chip ${color}">${pip(color, amount)}<b>${BALL[color].name}</b></span>`
   ).join('');
   const evoRows = c.to && c.need ? Object.entries(c.need).map(([color, amount]) =>
-    `<span class="detail-chip ${color}">${pball(color)}<b>${BALL[color].name} 카드 보너스</b><strong>${amount}개</strong></span>`
+    `<span class="detail-chip ${color}">${pip(color, amount)}<b>${BALL[color].name} 카드 보너스</b></span>`
   ).join('') : '';
 
   wrap.innerHTML = `
@@ -2920,10 +2898,12 @@ function renderMarketRow(selector, cards, interactive, me, bon) {
     const affordable = interactive && canAfford(me, card);
     button.disabled = !interactive;
     button.classList.toggle('buy', affordable);
-    button.setAttribute('aria-label', card.label + ' · ' + card.vp + '점' + (affordable ? ' · 잡기 가능' : ''));
+    const price = Object.entries(card.cost).map(([color, amount]) => `${BALL[color].name} ${amount}`).join(', ');
+    button.setAttribute('aria-label', `${card.label} · ${card.vp}점 · ${BALL[card.color].name} 보너스 ${card.bonus} · 획득 비용 ${price}` +
+      evolutionSummary(card) + (affordable ? ' · 잡기 가능' : ''));
     button.title = button.getAttribute('aria-label');
     button.querySelectorAll('.coin').forEach(coin => {
-      const color = coin.classList[1];
+      const color = coin.dataset.color;
       coin.classList.toggle('paid', color !== 'm' && bon[color] >= card.cost[color]);
     });
   });
@@ -2933,12 +2913,12 @@ function renderBank(interactive) {
   const pool = $('#bank .bank-pool');
   if (!pool.children.length) {
     for (const color of ALL_COLORS) {
-      const button = el('button', 'tok ' + color);
+      const button = el('button', 'ball-token tok ' + color);
       button.type = 'button';
       button.id = 'bank-' + color;
       button.dataset.focus = button.id;
       button.dataset.sound = 'none';
-      button.append(el('span', 'tok-count'), el('span', 'badge hidden'));
+      button.append(el('span', 'ball-count tok-count'), el('span', 'badge hidden'));
       if (color !== 'm') button.onclick = () => onTokenTap(color);
       pool.appendChild(button);
     }
@@ -2976,13 +2956,13 @@ function render() {
   const rivalsTurn = G.turn === rival.id && !G.over;
   rb.classList.toggle('active', rivalsTurn);
   const rivalBonus = bonuses(rival);
-  const rivalTokens = ALL_COLORS.filter(color => rival.tokens[color]).map(color => pip(color, rival.tokens[color], 'sm')).join('');
+  const rivalTokens = tokenPips(rival.tokens, 'sm');
   $('#rival-summary').innerHTML =
     '<span class="dock-name"></span>' +
     '<strong class="dock-score" id="rival-score"><b id="rival-score-value"></b><small> / ' + WIN_SCORE + '점</small></strong>' +
     '<span class="dock-meta">진화 ' + rival.buried.length + '</span>' +
     '<span class="dock-stat"><em>토큰</em>' + (rivalTokens || '<i>없음</i>') + '</span>' +
-    '<span class="dock-stat"><em>보너스</em>' + (COLORS.filter(color => rivalBonus[color]).map(color => pip(color, rivalBonus[color], 'sm')).join('') || '<i>없음</i>') + '</span>';
+    '<span class="dock-stat"><em>보너스</em>' + (tokenPips(rivalBonus, 'sm') || '<i>없음</i>') + '</span>';
   $('#rival-summary .dock-name').textContent = rival.name;
   updateScore('rival', rival);
   $('#rival-owned-count').textContent = rival.board.length;
@@ -3007,10 +2987,10 @@ function render() {
   $('#me-name').textContent = me.name;
   updateScore('me', me);
   $('#me-tokens').innerHTML = '<span class="lb">토큰</span>' +
-    ALL_COLORS.filter(color => me.tokens[color]).map(color => pip(color, me.tokens[color])).join('') +
+    tokenPips(me.tokens) +
     '<span class="lb">' + tokenCount(me) + '/' + TOKEN_LIMIT + '</span>';
   $('#me-bonus').innerHTML = '<span class="lb">보너스</span>' +
-    (COLORS.filter(color => meBonus[color]).map(color => pip(color, meBonus[color])).join('') || '<span class="lb">없음</span>');
+    (tokenPips(meBonus) || '<span class="lb">없음</span>');
   $('#me-owned-count').textContent = me.board.length;
   $('#me-kept-count').textContent = me.hand.length;
   const evolutionIds = myTurn ? new Set(evolutions(G, me).map(evo => evo.from)) : null;
@@ -3019,7 +2999,7 @@ function render() {
 
   const picks = $('#picks');
   picks.replaceChildren(...pick.map((color, index) => {
-    const button = el('button', 'pip ' + color);
+    const button = el('button', 'ball-token pball pip ' + color);
     button.type = 'button';
     button.dataset.sound = 'none';
     button.disabled = !interactive;
@@ -3038,6 +3018,7 @@ function render() {
   $('#confirm').disabled = !(ready || canPass);
   $('#cancel').disabled = !interactive || !pick.length;
   $('#status').textContent = G.over ? '종료' : canPass ? '선택 가능한 행동 없음' : ready ? '확정 가능' : pick.length ? pick.length + '개 선택' : myTurn && !busy ? '선택 대기' : '';
+  if (training) syncRivalIntent();
   if (focus && document.activeElement?.dataset.focus !== focus) focusCurrent(focus);
 }
 
@@ -3097,10 +3078,8 @@ function onCardTap(c) {
   const pay = payment(me, c);
   const reservable = !inHand && typeof c.tier === 'number' && me.hand.length < HAND_LIMIT;
   const stage = c.tier === 'L' ? '전설·환상' : c.tier === 'R' ? '희귀' : c.tier + '단계';
-  const tokens = ALL_COLORS.filter(color => c.cost[color]).map(color =>
-    '<span title="' + BALL[color].name + '">' + pip(color, c.cost[color], 'sm') + '</span>').join(' ');
-  const paid = pay && ALL_COLORS.filter(color => pay[color]).map(color =>
-    '<span title="' + BALL[color].name + '">' + pip(color, pay[color], 'sm') + '</span>').join(' ');
+  const tokens = tokenPips(c.cost);
+  const paid = pay && tokenPips(pay);
   const box = el('section', 'card-detail card-action fam-' + c.color);
   box.innerHTML =
     '<button class="detail-close" type="button" aria-label="닫기">×</button>' +
@@ -3112,7 +3091,7 @@ function onCardTap(c) {
     '<div class="card-action-status ' + (pay ? 'ok' : 'short') + '">' +
       (pay ? (paid ? '실제 지불 ' + paid : '보너스로 무료 획득') : '토큰이 부족합니다') + '</div>' +
     (c.to ? '<div>진화 → <strong>' + (DEX[c.to].label || c.to) + '</strong></div><div>' +
-      Object.entries(c.need).map(([color, count]) => BALL[color].name + ' 보너스 ' + count + '개').join(' · ') + '</div>' : '') +
+      '필요 보너스 ' + tokenPips(c.need) + '</div>' : '') +
     '</div></div>';
   box.querySelector('.detail-art').appendChild(imageOf(c));
   box.querySelector('.detail-close').onclick = closeModal;
@@ -3158,6 +3137,43 @@ function appendReview(box, rows) {
   box.appendChild(history);
 }
 
+function lessonTile({ card, title, caption, balls }) {
+  const tile = el('div', 'lesson-tile' + (card ? ' fam-' + card.color : ''));
+  if (card) tile.appendChild(imageOf(card));
+  const content = el('div');
+  content.appendChild(el('strong', '', title));
+  if (caption) content.appendChild(el('small', '', caption));
+  if (balls) {
+    const icons = tokenPips(balls);
+    if (icons) content.appendChild(el('div', 'lesson-balls', icons));
+  }
+  tile.appendChild(content);
+  return tile;
+}
+
+function lessonMoveTile(move, target) {
+  const kind = { buy: '잡기', reserve: '찜', take2: '볼 가져오기', take3: '볼 가져오기' };
+  const card = move.card || target;
+  const action = kind[move.type];
+  const caption = target ? `${target.vp}점 준비 · ${action}` :
+    card ? `${action} · ${card.vp}점` : '';
+  const tile = lessonTile({ card, title: card?.label || action || move.title, caption, balls: move.balls });
+  tile.title = move.title;
+  return tile;
+}
+
+function lessonTargetTile(c, player) {
+  const bon = bonuses(player);
+  const ready = canAfford(player, c);
+  const balls = ready ? null : Object.fromEntries(ALL_COLORS.map(color =>
+    [color, Math.max(0, (c.cost[color] || 0) - bon[color] - player.tokens[color])]));
+  const wild = Math.max(0, player.tokens.m - (c.cost.m || 0));
+  return lessonTile({
+    card: c, title: c.label, balls,
+    caption: ready ? `${c.vp}점 · 잡기 가능` : `${c.vp}점 · 부족${wild ? ' · 마스터볼 ' + wild + '개 대체' : ''}`,
+  });
+}
+
 function showLesson() {
   if (!training?.lesson || busy || G.over || G.turn !== ME) return;
   const lesson = training.lesson;
@@ -3165,43 +3181,63 @@ function showLesson() {
   const best = lesson.options[0];
   const box = el('div', 'lesson');
   const header = el('header');
+  const heading = el('div');
+  heading.append(el('h3', '', '수 읽기'), el('span', 'lesson-mode', `${TRAINING_NAMES[training.mode]} · ${G.round}라운드`));
   const close = el('button', 'ghost', '닫기');
   close.onclick = closeModal;
-  header.append(el('h3', '', `${TRAINING_NAMES[training.mode]} · ${G.round}라운드`), close);
+  header.append(heading, close);
   box.appendChild(header);
-  if (last?.opponent) {
-    box.append(el('h4', '', '상대 행동과 예상 의도'), el('p', '', last.opponent));
-  }
-  const advice = el('div', 'coach-recommend');
-  advice.append(el('small', '', last?.deviation ? '지난 선택 뒤의 만회 수' : '이번 턴 추천'), el('strong', '', best.title), el('p', '', moveReason(G, best.mv)));
-  box.appendChild(advice);
-  box.appendChild(el('h4', '', '노릴 카드'));
-  for (const target of lesson.targets) box.appendChild(el('p', '', targetText(target, G.players[ME])));
-  const threat = cardTargets(G, G.players[1 - ME]).find(t => !G.players[1 - ME].hand.includes(t.c));
-  if (threat) {
-    const block = lesson.options.find(o => o.mv.id === threat.c.id);
-    box.append(el('h4', '', '상대 견제'), el('p', '', `상대 기준 ${targetText(threat, G.players[1 - ME])}. ` +
-      (block ? `먼저 ${block.title}로 선점할 수 있습니다.` : `선점이 어려우므로 ${best.title}로 내 계획을 진행하세요.`)));
-  }
+  const advice = el('div', 'lesson-pick');
   const select = el('select');
   select.id = 'study-choice';
-  const label = el('label', '', '비교할 내 행동');
+  const label = el('label', '', '내 수 비교');
   label.htmlFor = select.id;
-  const heading = el('h4');
-  heading.appendChild(label);
   lesson.options.forEach((o, i) => select.add(new Option(`${i === 0 ? '추천 · ' : i === 1 ? '차선 · ' : ''}${o.title}`, String(i))));
-  const details = el('div');
+  const details = el('details');
+  details.appendChild(el('summary', '', '예상 응수와 대응'));
+  const branches = el('div');
+  details.appendChild(branches);
   const apply = el('button', 'primary', '이 수로 두기');
   apply.dataset.sound = 'none';
   apply.onclick = () => { closeModal(); doHumanMove(lesson.options[select.selectedIndex].mv); };
+  const simulation = el('div');
+  function sampleOdds(option) {
+    const sample = el('button', 'ghost sample', '이 수의 모의 승률');
+    const results = el('p', 'sample-result');
+    results.setAttribute('aria-live', 'polite');
+    const report = () => {
+      const { win, loss, unfinished } = option.matches;
+      const completed = win + loss;
+      results.textContent = (completed ? `예상 승률 ${Math.round(100 * win / completed)}% · ` : '') +
+        `${win}승 ${loss}패${unfinished ? ' · 미결 ' + unfinished : ''} · 간이 AI`;
+    };
+    simulation.replaceChildren(results);
+    if (option.matches) { report(); return; }
+    simulation.prepend(sample);
+    sample.onclick = async () => {
+      sample.disabled = true;
+      const record = { win: 0, loss: 0, unfinished: 0 };
+      for (let i = 0; i < MATCH_SAMPLES; i++) {
+        sample.textContent = `모의 대국 ${i + 1}/${MATCH_SAMPLES}`;
+        await sleep(12);
+        if (!sample.isConnected || $('#modal').classList.contains('hidden') || training?.lesson !== lesson) return;
+        record[matchSample(G, option.mv, i)]++;
+      }
+      option.matches = record;
+      sample.remove();
+      report();
+    };
+  }
   function preview() {
     const option = lesson.options[select.selectedIndex];
-    details.replaceChildren();
-    if (option !== best) details.appendChild(el('p', '', moveReason(G, option.mv)));
+    const move = movePreview(G, option.mv);
+    const target = option.mv.type.startsWith('take') ? collectionTarget(G, option.mv) : null;
+    advice.replaceChildren(el('small', '', option === best ? (last?.deviation ? '만회 수' : '추천 수') : '선택한 수'), lessonMoveTile(move, target));
+    branches.replaceChildren();
     const lines = new Map();
     for (const line of option.lines) {
       for (const [index, branch] of line.branches.entries()) {
-        const key = JSON.stringify([branch.reply, branch.response, branch.scores, branch.result]);
+        const key = JSON.stringify([branch.replyKey, branch.response?.title, branch.scores, branch.result]);
         const entry = lines.get(key) || { ...branch, count: 0, strongest: 0 };
         entry.count++;
         if (index === 0) entry.strongest++;
@@ -3209,50 +3245,80 @@ function showLesson() {
       }
     }
     const sorted = [...lines.values()].sort((a, b) => b.strongest - a.strongest || b.count - a.count);
-    details.appendChild(el('h4', '', '예상 응수와 대응'));
-    if (!sorted.length) details.appendChild(el('p', '', '이 행동으로 마지막 라운드가 끝납니다.'));
+    if (!sorted.length) branches.appendChild(el('p', '', '이 수로 대국 종료'));
     for (const [i, b] of sorted.slice(0, 2).entries()) {
-      const row = el('div', 'branch');
-      row.append(el('strong', '', `${i === 0 ? '가장 경계할 수' : '다른 전개'} · ${b.reply}`),
-        el('p', '', `${b.response ? '내 대응 · ' + b.response + ' → ' : ''}내 점수 대 상대 점수 ${b.scores}${b.result ? ' · ' + b.result : ''}`),
-        el('small', '', `가상 배치 ${STUDY_SAMPLES}개 중 ${b.count}개에서 검토된 전개`));
-      details.appendChild(row);
+      const row = el('div', 'branch lesson-branch');
+      row.append(el('small', '', i === 0 ? '상대 응수' : '다른 응수'), lessonMoveTile(b.reply));
+      if (b.response) row.append(el('small', '', '내 대응'), lessonMoveTile(b.response));
+      row.appendChild(el('small', '', `나 : 상대 ${b.scores}${b.result ? ' · ' + b.result : ''}`));
+      branches.appendChild(row);
     }
-    details.appendChild(el('p', 'hint', `가상 덱 ${STUDY_SAMPLES}개에서 상대 응수와 내 후속 수를 탐색했습니다. 진화는 코치 추천을 가정합니다.`));
-    const sample = el('button', 'ghost sample', '이 선택의 모의 승률 보기');
-    const results = el('p');
-    results.setAttribute('aria-live', 'polite');
-    const report = () => {
-      const { win, loss, unfinished } = option.matches;
-      const completed = win + loss;
-      results.textContent = `${win}승 ${loss}패 · 미결 ${unfinished}판` +
-        (completed ? ` · 완주 ${completed}판 중 승률 ${Math.round(100 * win / completed)}%` : '') +
-        ' (양쪽 모두 간이 AI, 최대 120수)';
-    };
-    if (option.matches) report();
-    else {
-      details.appendChild(sample);
-      sample.onclick = async () => {
-        sample.disabled = true;
-        const record = { win: 0, loss: 0, unfinished: 0 };
-        for (let i = 0; i < MATCH_SAMPLES; i++) {
-          sample.textContent = `모의 대국 ${i + 1}/${MATCH_SAMPLES}`;
-          await sleep(12);
-          if (!sample.isConnected || $('#modal').classList.contains('hidden') || training?.lesson !== lesson) return;
-          record[matchSample(G, option.mv, i)]++;
-        }
-        option.matches = record;
-        sample.remove();
-        report();
-      };
-    }
-    details.appendChild(results);
+    sampleOdds(option);
   }
   select.onchange = preview;
-  box.append(heading, select, details, apply);
+  box.appendChild(advice);
+  if (lesson.targets.length) {
+    const targets = el('div', 'lesson-tiles');
+    for (const { c } of lesson.targets) targets.appendChild(lessonTargetTile(c, G.players[ME]));
+    box.append(el('h4', '', '노릴 카드'), targets);
+  }
+  const compare = el('h4');
+  compare.appendChild(label);
+  box.append(compare, select, apply, details, simulation);
   preview();
   appendReview(box, training.history);
   openModal(box);
+}
+
+function syncRivalIntent(reveal = false) {
+  const lesson = training?.lesson;
+  const available = lesson && !busy && !G.over && G.turn === ME;
+  const intent = available && lesson.intentOpen ? lesson.intent : null;
+  const button = $('#rival-intent');
+  button.disabled = !available || lesson.intentPending;
+  button.setAttribute('aria-pressed', String(Boolean(intent)));
+  if (available) {
+    const tip = $('#coach-tip');
+    const lead = training.history.at(-1)?.deviation ? '만회 수 · ' : '추천 · ';
+    tip.textContent = intent ? '상대 예상 · ' + intent.label :
+      lesson.intentPending ? '상대 예상 수 계산 중…' :
+      lesson.intentError ? '상대 예상 수를 계산하지 못했습니다' : lead + lesson.options[0].title;
+    tip.title = tip.textContent;
+  }
+  const cards = intent ? intent.cards.map(id => $(`#game [data-card="${id}"]`)).filter(Boolean) : [];
+  const marked = new Set(cards);
+  if (intent?.tier) marked.add($('#deck-' + intent.tier));
+  if (intent) for (const color of intent.colors) marked.add($('#bank-' + color));
+  for (const node of document.querySelectorAll('.intent-mark')) {
+    if (!marked.has(node)) node.classList.remove('intent-mark');
+  }
+  for (const node of marked) node.classList.add('intent-mark');
+  const anchor = cards[0] || (intent?.tier ? $('#deck-' + intent.tier) : null);
+  if (reveal) anchor?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: motion.matches ? 'instant' : 'smooth' });
+}
+
+async function toggleRivalIntent() {
+  const lesson = training?.lesson;
+  if (!lesson || busy || G.over || G.turn !== ME || lesson.intentPending) return;
+  if (lesson.intent) {
+    lesson.intentOpen = !lesson.intentOpen;
+    syncRivalIntent(lesson.intentOpen);
+    return;
+  }
+  lesson.intentError = false;
+  lesson.intentPending = true;
+  syncRivalIntent();
+  try {
+    const intent = await requestOpponentTask(G, 'rivalIntent');
+    if (training?.lesson !== lesson || G.over) return;
+    lesson.intent = intent;
+    lesson.intentOpen = true;
+  } catch {
+    lesson.intentError = true;
+  } finally {
+    lesson.intentPending = false;
+    if (training?.lesson === lesson) syncRivalIntent(lesson.intentOpen);
+  }
 }
 
 function prepareLesson() {
@@ -3260,8 +3326,7 @@ function prepareLesson() {
   const best = training.lesson.options[0];
   const last = training.history.at(-1);
   if (last) last.recovery = best.title;
-  $('#coach-caption').textContent = last?.opponent ? `상대 · ${last.opponent}` : `${TRAINING_NAMES[training.mode]} · ${G.round}라운드`;
-  $('#coach-tip').textContent = `${last?.deviation ? '만회 수' : '추천'} · ${best.title}`;
+  $('#coach-caption').textContent = `${TRAINING_NAMES[training.mode]} · ${G.round}라운드`;
   $('#coach-open').disabled = false;
 }
 
@@ -3366,7 +3431,7 @@ async function step() {
   const p = cur(G);
   const w = G.pressure ? pressureWeights(G) : null;
   const targets = w ? pressureTargets(G, G.players[ME], w) : null;
-  const mv = w ? await requestSwindlerMove(G) : chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
+  const mv = w ? await requestOpponentTask(G, 'swindlerMove') : chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
   const sources = actionSources(mv);
   const action = training ? moveTitle(G, mv) : '';
   const intent = training ? moveReason(G, mv) : '';
@@ -3587,7 +3652,8 @@ window.PS = { get game() { return G; }, render, askEvolution, evolutions };
 
 // ── 대전 연출 ──────────────────────────────────────────────
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
-const EFFECT_COLOR = { r: '#ff786f', b: '#6bbdff', y: '#ffe087', p: '#ffade0', k: '#bcb5ff', m: '#d1a7ff' };
+const EFFECT_COLOR = Object.fromEntries(ALL_COLORS.map(color =>
+  [color, getComputedStyle(document.documentElement).getPropertyValue('--' + color).trim()]));
 const SOUND_KEY = 'poke-splendor-sound-v1';
 const SOUND = {
   tap: { notes: [510], type: 'sine', length: .065, level: .10 },
