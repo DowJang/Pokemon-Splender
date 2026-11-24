@@ -17,11 +17,10 @@
   --dim: #97a3bd;
   --acc: #ffcb3d;
   --ok: #46c37b;
-  --r: #f12c32; --b: #1864f1; --y: #ffd320; --p: #f12d83; --k: #282d37; --m: #852aeb;
+  --r: #bd251a; --b: #1864f1; --y: #ffd320; --p: #ffabe0; --k: #282d37; --m: #852aeb;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
-  --rival-dock-h: calc(116px + var(--safe-t));
-  --me-dock-h: calc(140px + var(--safe-b));
+  --mini-card-h: 59px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -110,13 +109,17 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 /* ── 게임 레이아웃 ─────────────────────────────────── */
 #game {
   position: fixed; inset: 0; z-index: 0;
-  display: block; height: 100dvh; min-height: 0; overflow: hidden; background: var(--bg); isolation: isolate;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, var(--field-width)); justify-content: center;
+  height: 100dvh; min-height: 0; overflow: hidden; background: var(--bg); isolation: isolate;
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
 }
 .playfield {
-  position: absolute; inset: var(--rival-dock-h) 0 var(--me-dock-h);
+  position: relative;
   display: flex; flex-direction: column; min-height: 0; width: 100%;
-  max-width: 720px; margin: 0 auto; overflow: hidden;
+  overflow: hidden;
 }
+.arena-info { min-width: 0; flex: none; }
 .board { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 6px; -webkit-overflow-scrolling: touch; }
 .rowwrap { margin-bottom: 2px; }
 .rowlabel { font-size: 9px; color: var(--dim); margin: 0 2px 1px; letter-spacing: .3px; font-weight: 600; line-height: 1.15; }
@@ -143,10 +146,14 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 }
 
 /* 카드, 볼 은행, 보유 볼, 코치가 같은 색과 계수 표기를 사용한다. */
+:is(.r, .b, .y, .k, .m, .fam-r, .fam-b, .fam-y, .fam-k) { --ball-mark: none; }
 .r, .fam-r { --ball-color: var(--r); }
 .b, .fam-b { --ball-color: var(--b); }
-.y, .fam-y { --ball-color: var(--y); }
-.p, .fam-p { --ball-color: var(--p); }
+.y, .fam-y { --ball-color: var(--y); --ribbon-ink: #221b09; }
+.p, .fam-p {
+  --ball-color: var(--p); --ribbon-ink: #34102d;
+  --ball-mark: repeating-linear-gradient(135deg, transparent 0 3px, #791d5952 3px 5px);
+}
 .k, .fam-k { --ball-color: var(--k); }
 .m { --ball-color: var(--m); }
 .ball-token {
@@ -154,13 +161,16 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   width: var(--ball-size); height: var(--ball-size); padding: 0; flex: none;
   position: relative; display: inline-grid; place-items: center; vertical-align: middle;
   border: 1px solid #eef4ff; border-radius: 50%; box-shadow: 0 1px 3px #0007;
-  background: linear-gradient(180deg, var(--ball-color) 44%, #141b28 44% 56%, #f9fbff 56%);
+  background-image: var(--ball-mark, linear-gradient(transparent, transparent)),
+    linear-gradient(180deg, var(--ball-color) 44%, #141b28 44% 56%, #f9fbff 56%);
+  background-size: 100% 44%, 100% 100%;
+  background-repeat: no-repeat;
   color: #fff; font-variant-numeric: tabular-nums;
 }
 .ball-count, .pball::before {
   display: grid; place-items: center; width: 67%; aspect-ratio: 1;
   border: 1px solid #eef4ff; border-radius: 50%; background: #141b28;
-  font-size: max(9px, calc(var(--ball-size) * .42)); line-height: 1; font-weight: 850;
+  font-size: max(9px, calc(var(--ball-size) * .45)); line-height: 1; font-weight: 850;
 }
 .pball { --ball-size: 15px; }
 .pball::before { content: ''; width: 38%; background: #f9fbff; border-color: #141b28; }
@@ -168,24 +178,21 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* ── 상·하단 고정 카드 현황 ─────────────────────────── */
 .player-dock {
-  position: absolute; z-index: 30; left: 50%; width: min(100%, 720px); min-height: 0;
-  transform: translateX(-50%);
+  position: relative; z-index: 2; min-width: 0;
   background: var(--panel);
-  background: color-mix(in srgb, var(--panel) 96%, transparent);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .player-dock.active { box-shadow: inset 0 0 0 1px var(--acc), 0 5px 18px #0008; }
 .rivalbar {
-  top: 0; height: var(--rival-dock-h); padding: max(4px, var(--safe-t)) 7px 5px;
-  border-bottom: 1px solid var(--line); box-shadow: 0 5px 18px #0008; overflow: hidden;
+  padding: calc(4px + var(--safe-t)) 7px 5px;
+  border-bottom: 1px solid var(--line); box-shadow: 0 5px 18px #0008;
 }
 .me {
-  bottom: 0; height: var(--me-dock-h); padding: 4px 8px calc(5px + var(--safe-b));
-  border-top: 1px solid var(--line); box-shadow: 0 -5px 18px #0008; overflow: hidden;
+  padding: 4px 8px calc(6px + var(--safe-b));
+  border-top: 1px solid var(--line); box-shadow: 0 -5px 18px #0008;
 }
 .dock-summary {
   display: flex; align-items: center; gap: 6px; min-height: 21px;
-  font-size: 10px; white-space: nowrap; overflow: hidden;
+  font-size: 11px; white-space: nowrap; flex-wrap: wrap;
 }
 .dock-name {
   max-width: 80px; overflow: hidden; text-overflow: ellipsis;
@@ -204,28 +211,28 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   margin-left: 2px; padding-left: 10px; border-left: 1px solid #596781;
 }
 .collection-title {
-  display: flex; align-items: center; gap: 4px; height: 15px;
-  color: var(--dim); font-size: 9px; font-weight: 700; letter-spacing: .15px;
+  display: flex; align-items: center; gap: 4px; min-height: 20px;
+  color: var(--dim); font-size: 11px; font-weight: 750;
 }
-.collection-title b { color: var(--ink); font-size: 9px; }
+.collection-title b { color: var(--ink); }
 .reserve-dot {
   width: 9px; height: 9px; flex: none; border-radius: 50%;
   background: var(--m); border: 1px solid #c6a7f2; box-shadow: 0 0 6px #9f6be8aa;
 }
 .collection-strip {
-  display: flex; align-items: center; gap: 5px; min-height: 64px; max-width: 100%;
-  max-height: 64px; padding: 2px 2px 2px 1px; overflow-x: auto; overflow-y: hidden;
+  display: flex; align-items: center; gap: 5px; min-height: calc(var(--mini-card-h) + 9px); max-width: 100%;
+  padding: 3px 3px 4px; overflow-x: auto; overflow-y: hidden;
   overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #53617b transparent;
 }
 .collection-strip::-webkit-scrollbar { height: 3px; }
 .collection-strip::-webkit-scrollbar-thumb { background: #53617b; border-radius: 3px; }
 .empty-collection {
-  display: grid; place-items: center; min-width: 48px; height: 50px;
-  color: #66728a; border: 1px dashed #48546c; border-radius: 7px; font-size: 9px;
+  display: grid; place-items: center; min-width: 48px; height: calc(var(--mini-card-h) - 6px);
+  color: #aebed6; border: 1px dashed #5c6e8b; border-radius: 7px; font-size: 11px;
 }
 .collection-card {
-  position: relative; flex: 0 0 43px; width: 43px; height: 56px; padding: 0;
-  display: grid; grid-template-rows: 24px minmax(0, 1fr) 11px;
+  position: relative; flex: 0 0 53px; width: 53px; height: var(--mini-card-h); padding: 0;
+  display: grid; grid-template-rows: 24px minmax(0, 1fr) 14px;
   overflow: hidden; border: 1px solid #0005; border-radius: 7px;
   background: #eef0f4;
   color: #232935; box-shadow: 0 1px 3px #0008; text-align: left;
@@ -235,16 +242,24 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .collection-card img {
   align-self: center; justify-self: center; width: 75%; height: 85%; min-height: 0; object-fit: contain;
 }
-.collection-card.has-evo { flex-basis: 65px; width: 65px; height: 60px; }
+.collection-card.has-evo { flex-basis: 65px; width: 65px; }
 .collection-name {
-  overflow: hidden; color: #252b35; font-size: 8px; font-weight: 800;
-  line-height: 10px; text-align: center; text-overflow: ellipsis; white-space: nowrap;
+  padding-inline: 2px; overflow: hidden; color: #202835; font-size: 10px; font-weight: 850;
+  line-height: 14px; text-align: center; text-overflow: ellipsis; white-space: nowrap;
 }
 .kept-card { box-shadow: 0 0 0 2px #a875e8, 0 2px 5px #0009; }
-.kept-card::after {
-  content: ''; position: absolute; z-index: 3; right: 2px; bottom: 2px;
-  width: 7px; height: 7px; border-radius: 50%; background: var(--m); border: 1px solid #fff;
+.me .collection-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, min(61%, 220px)); }
+.me .collection-row:has(#me-kept .empty-collection) { grid-template-columns: minmax(0, 1fr) minmax(72px, 23%); }
+.me .kept-group { min-width: 0; max-width: none; margin-left: 0; padding-left: 6px; }
+#me-kept { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
+#me-kept .collection-card { width: 100%; }
+#me-kept .empty-collection { grid-column: 1 / -1; }
+.collection-link {
+  display: inline-flex; align-items: center; gap: 4px; padding: 0 5px 0 0;
+  font-weight: inherit; color: var(--ink);
 }
+.collection-link:not(:disabled) { color: var(--arena); text-decoration: underline; text-underline-offset: 3px; }
+.collection-link:disabled { cursor: default; }
 
 /* ── 은행 ──────────────────────────────────────────── */
 .bank { display: flex; justify-content: center; gap: 4px; padding: 2px 6px; background: var(--bg2); border-top: 1px solid var(--line); flex: none; }
@@ -280,7 +295,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 .me-mid { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; align-items: center; min-height: 15px; }
 .me-tokens, .me-bonus { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
-.me-bonus .lb, .me-tokens .lb { font-size: 9px; color: var(--dim); width: auto; }
+.me-bonus .lb, .me-tokens .lb { font-size: 11px; color: var(--dim); font-weight: 650; }
 
 /* ── 모달 / 토스트 ─────────────────────────────────── */
 .modal { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; padding: 16px; z-index: 50; }
@@ -347,10 +362,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 .action-popup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #111a2df2; border: 1px solid var(--acc); box-shadow: 0 10px 35px #0009; padding: 14px 22px; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; z-index: 70; pointer-events: none; white-space: nowrap; }
 
-@media (min-width: 620px) {
-  .cards { gap: 7px; }
-  .collection-card { flex-basis: 47px; width: 47px; height: 60px; }
-}
+@media (min-width: 620px) { .cards { gap: 7px; } }
 
 @media (max-width: 420px) {
   .card-detail { padding: 15px; }
@@ -362,10 +374,10 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 }
 
 @media (max-height: 560px) {
-  :root { --rival-dock-h: calc(102px + var(--safe-t)); --me-dock-h: calc(108px + var(--safe-b)); }
+  :root { --mini-card-h: 44px; }
   .dock-meta, .dock-stat em { display: none; }
-  .collection-strip { min-height: 52px; max-height: 52px; }
-  .collection-card { flex-basis: 38px; width: 38px; height: 48px; }
+  .collection-title { min-height: 16px; }
+  .collection-card { grid-template-rows: 19px minmax(0, 1fr) 13px; }
 }
 
 #training-start { color: #a8dbff; border-color: #5588ad; }
@@ -401,8 +413,6 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   --arena: #79e5dc;
   --rival: #c7a9ff;
   --field-width: 760px;
-  --rival-dock-h: calc(106px + var(--safe-t));
-  --me-dock-h: calc(139px + var(--safe-b));
   --card-ratio: 1.13;
 }
 
@@ -493,7 +503,7 @@ button:disabled { cursor: default; }
   mask-image: radial-gradient(ellipse at center, black 15%, transparent 83%);
 }
 .playfield { max-width: var(--field-width); }
-.player-dock { width: min(100%, var(--field-width)); background: linear-gradient(120deg, #1a2943, #0e192f); }
+.player-dock { background: linear-gradient(120deg, #1a2943, #0e192f); }
 .rivalbar { --team: var(--rival); border-radius: 0 0 17px 17px; }
 .me { --team: var(--arena); border-radius: 17px 17px 0 0; }
 .player-dock.active {
@@ -501,11 +511,12 @@ button:disabled { cursor: default; }
 }
 .rivalbar, .me { padding-inline: clamp(9px, 3vw, 17px); }
 .dock-summary { gap: 6px; min-height: 27px; }
-.dock-name, #me-name { max-width: 85px; font-size: 12px; }
+.dock-name, #me-name { max-width: 85px; font-size: 13px; }
+#me-name { flex: 0 1 auto; min-width: 0; max-width: clamp(56px, 18vw, 112px); }
 .dock-meta, .dock-stat { color: #bac9e0; }
 .dock-stat em, .dock-stat i { color: #a4b4cd; }
 .dock-score, .me-head .score {
-  color: var(--team); font-weight: 900; font-size: 15px; flex: none;
+  color: var(--team); font-weight: 900; font-size: 17px; flex: none;
   font-variant-numeric: tabular-nums;
 }
 .dock-score small, .me-head .score small { margin-left: 2px; color: var(--dim); font-size: 9px; }
@@ -519,13 +530,12 @@ button:disabled { cursor: default; }
 .empty-collection { color: #a0b1cd; border-color: #4e607c; }
 .kept-group { border-color: #494966; }
 .collection-card img { filter: drop-shadow(0 1px 1px #10233e60); }
-.collection-card { background: linear-gradient(180deg, var(--family) 0 15px, #e4eff8 15px 76%, #fff); }
-.collection-name { font-size: 8px; }
-.me-head { padding-right: 0; min-height: 27px; }
+.collection-card { background: linear-gradient(180deg, #e4eff8 76%, #fff); }
+.me-head { padding-right: 0; min-height: 32px; }
 .me-head .btns { position: static; background: none; padding: 0; flex: none; }
-.me-head .btns button { min-height: 25px; }
+.me-head .btns button { min-height: 30px; font-size: 12px; }
 #menu { min-width: 29px; }
-#status { font-weight: 700; color: #c1cfe5; }
+#status { font-weight: 750; color: #dbe7fa; }
 .me-mid { margin: 4px 0 1px; }
 
 .arena-hud {
@@ -588,7 +598,7 @@ button:disabled { cursor: default; }
   border-radius: 8px; aspect-ratio: var(--card-ratio); background: #e9f0fa;
   padding: 0; line-height: 1; box-shadow: 0 2px 5px #0009; text-align: left;
 }
-.card:not(.empty) { min-height: calc(2 * var(--cost-size) + 48px); }
+.card:not(.empty) { min-height: calc(2 * var(--cost-size) + 52px); }
 .card.fam-r { --base: #ffe7e4; }
 .card.fam-b { --base: #dbeaff; }
 .card.fam-y { --base: #fff2c7; }
@@ -601,11 +611,12 @@ button:disabled { cursor: default; }
 .card.empty { opacity: .55; }
 .ribbon {
   flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-  padding-inline: 4px; min-width: 0; background: var(--ball-color);
+  padding-inline: 4px; min-width: 0;
+  background-color: var(--ball-color); background-image: var(--ball-mark, none);
 }
 .card .ribbon { height: 24%; min-height: 25px; }
 .ribbon .vp, .ribbon .bonus-count {
-  font-weight: 900; color: white; line-height: 1; text-shadow: 0 1px 2px #000, 0 0 3px #000;
+  font-weight: 900; color: var(--ribbon-ink, #fff); line-height: 1;
 }
 .ribbon .vp { grid-column: 1; grid-row: 1; }
 .ribbon .bonus-count { grid-column: 3; grid-row: 1; justify-self: end; font-size: 11px; }
@@ -644,15 +655,16 @@ button:disabled { cursor: default; }
 .card .coin { --ball-size: var(--cost-size); }
 .card .coin.paid .ball-count { text-decoration: line-through; color: #b2bfd1; }
 .card .nm { padding: 1px 2px 2px; background: #f3f7fe; }
-.card .pill { padding: 1px 4px; border: 0; background: transparent; border-radius: 0; font-size: clamp(9px, 2.55vw, 12px); font-weight: 900; }
+.card .pill { padding: 1px 2px; background: transparent; border-radius: 0; font-size: clamp(10px, 2.8vw, 13px); font-weight: 900; }
 
 .bank {
   align-items: center; gap: 9px; min-height: 56px; padding: 6px 9px;
   background: linear-gradient(180deg, #182a40, #101d30); border: 1px solid #435777; border-bottom: 0; border-radius: 13px 13px 0 0;
 }
-.bank > strong { color: #e3edff; font-size: 11px; white-space: nowrap; }
-.bank-pool { display: flex; justify-content: center; gap: clamp(7px, 2.1vw, 15px); }
-.tok.m { margin-left: 3px; }
+.bank > strong { color: #e3edff; font-size: 12px; white-space: nowrap; }
+.bank-pool { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(3px, 1vw, 12px); }
+.bank-slot { display: grid; justify-items: center; align-content: start; gap: 3px; min-width: 0; }
+.bank-token-label { color: #e4edff; font-size: 11px; font-weight: 750; line-height: 1.15; white-space: nowrap; }
 .tok.pickable { box-shadow: 0 0 0 2px #7be9c47f, 0 3px 7px #000d; }
 .tok.is-picked { box-shadow: 0 0 0 2px var(--acc), 0 0 14px #ffd86d68; }
 .tok:hover:enabled { transform: translateY(-2px); }
@@ -683,20 +695,55 @@ button:disabled { cursor: default; }
 .result-screen h3 { color: var(--arena); font-size: clamp(25px, 7vw, 36px); margin: 0 0 6px; }
 .result-screen.is-win h3 { color: var(--acc); }
 .result-row { gap: 9px; flex-wrap: wrap; }
+.collection-gallery header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.collection-gallery header h3 { margin: 0; }
+.collection-gallery .ghost { padding: 7px 11px; }
+.collection-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(67px, 1fr)); gap: 7px; }
+.collection-gallery-grid .collection-card { width: 100%; height: 74px; }
+.collection-gallery-grid .collection-name { font-size: 11px; }
 
 #effects {
   position: fixed; z-index: 65; inset: 0; pointer-events: none; overflow: hidden;
 }
-.fx-orb, .fx-spark, .fx-ring, .fx-confetti { position: absolute; top: 0; left: 0; pointer-events: none; }
+.fx-orb, .fx-spark, .fx-star, .fx-ring, .fx-aura, .fx-trail, .fx-score, .fx-confetti {
+  position: absolute; top: 0; left: 0; pointer-events: none;
+}
 .fx-orb {
   width: 20px; height: 20px; margin: -10px; border: 1px solid #fff; border-radius: 50%; color: var(--fx);
   background: radial-gradient(circle at 34% 30%, #fff 0 9%, transparent 33%),
     linear-gradient(180deg, var(--fx) 45%, #142034 46% 54%, #f7fbff 55%);
-  box-shadow: 0 0 14px currentColor;
+  box-shadow: 0 0 10px #fff9, 0 0 19px currentColor;
 }
-.fx-spark, .fx-confetti { height: 6px; width: 6px; margin: -3px; border-radius: 2px; background: var(--fx); box-shadow: 0 0 9px var(--fx); }
+.fx-spark, .fx-confetti {
+  height: 6px; width: 6px; margin: -3px; border-radius: 2px;
+  background: color-mix(in srgb, var(--fx) 72%, #fff); box-shadow: 0 0 9px var(--fx);
+}
+.fx-star {
+  width: 18px; height: 18px; margin: -9px;
+  background: radial-gradient(#fff 24%, var(--fx) 76%);
+  clip-path: polygon(50% 0, 62% 37%, 100% 50%, 62% 63%, 50% 100%, 38% 63%, 0 50%, 38% 37%);
+}
+.fx-trail {
+  width: 13px; height: 13px; margin: -6.5px; border-radius: 50%;
+  background: radial-gradient(#fff, var(--fx) 44%, transparent 75%); box-shadow: 0 0 13px var(--fx);
+}
 .fx-confetti { width: 7px; height: 12px; box-shadow: none; }
-.fx-ring { width: 70px; height: 70px; margin: -35px; border: 2px solid var(--fx); border-radius: 50%; box-shadow: 0 0 15px var(--fx); }
+.fx-ring {
+  width: 70px; height: 70px; margin: -35px;
+  border: 2px solid color-mix(in srgb, var(--fx) 56%, #fff); border-radius: 50%;
+  box-shadow: 0 0 15px var(--fx), inset 0 0 10px var(--fx);
+}
+.fx-aura {
+  width: 118px; height: 118px; margin: -59px; border-radius: 50%;
+  background: repeating-conic-gradient(from 8deg, transparent 0 21deg, var(--fx) 29deg 40deg, transparent 47deg 60deg);
+  mask-image: radial-gradient(circle, #000 10%, #000c 43%, transparent 72%);
+}
+.fx-score {
+  min-width: 38px; translate: -50% -50%; padding: 2px 6px; text-align: center;
+  color: #fff7d1; font-size: 19px; line-height: 1.2; font-weight: 950;
+  border-radius: 7px; background: #132036; box-shadow: 0 0 16px var(--fx);
+  text-shadow: 0 1px 3px #000;
+}
 .action-popup {
   --fx: #8debd1;
   top: clamp(154px, 29vh, 280px); display: flex; align-items: center; gap: 11px;
@@ -704,9 +751,10 @@ button:disabled { cursor: default; }
   padding: 9px 16px; border-radius: 12px; color: #fff;
   border-color: color-mix(in srgb, var(--fx) 68%, #fff);
   background: linear-gradient(116deg, color-mix(in srgb, var(--fx) 22%, #122139), #121e34 72%);
-  box-shadow: 0 9px 31px #000a, inset 0 0 17px #fff0;
+  box-shadow: 0 9px 31px #000a, 0 0 24px color-mix(in srgb, var(--fx) 48%, transparent),
+    inset 0 0 15px color-mix(in srgb, var(--fx) 18%, transparent);
 }
-.action-popup small { display: block; color: var(--fx); font-size: 10px; font-weight: 850; }
+.action-popup small { display: block; color: color-mix(in srgb, var(--fx) 45%, #fff); font-size: 11px; font-weight: 850; }
 .action-popup strong { display: block; font-size: clamp(16px, 4.8vw, 21px); }
 .action-popup em { display: block; margin-top: 2px; color: #d8e5fb; font-size: 11px; font-style: normal; font-weight: 700; }
 .action-popup img { width: 54px; height: 49px; object-fit: contain; filter: drop-shadow(0 3px 4px #0009); }
@@ -722,7 +770,6 @@ button:disabled { cursor: default; }
 @keyframes modal-in { from { opacity: .3; translate: 0 7px; } to { opacity: 1; translate: 0 0; } }
 
 @media (max-width: 540px) {
-  :root { --rival-dock-h: calc(105px + var(--safe-t)); --me-dock-h: calc(132px + var(--safe-b)); --card-ratio: .83; }
   .hero { min-height: 151px; padding-inline: 16px; }
   .hero-art { width: 61%; }
   .hero-mon.m1 { right: 55%; height: 48%; }
@@ -731,20 +778,21 @@ button:disabled { cursor: default; }
   .board { gap: 4px; padding-inline: 5px; grid-template-rows: repeat(4, max-content); }
   .rowwrap { grid-template-columns: 1fr; gap: 3px; padding: 3px 5px 4px; }
   .rowlabel { display: flex; align-items: center; justify-content: space-between; padding-left: 3px; min-height: 16px; }
-  .rowlabel strong { font-size: 10px; }
-  .deck-button { padding: 2px 5px; font-size: 9px; }
+  .rowlabel strong { font-size: 12px; }
+  .deck-button { padding: 3px 6px; font-size: 10px; }
   .card { --cost-size: 24px; }
   #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
   .cards:not(#row-special):has(.cost > :nth-child(3)) .card {
-    min-height: calc(3 * var(--cost-size) + 50px);
+    min-height: calc(3 * var(--cost-size) + 54px);
   }
   .cards:not(#row-special):has(.cost > :nth-child(4)) .card {
-    min-height: calc(4 * var(--cost-size) + 58px);
+    min-height: calc(4 * var(--cost-size) + 64px);
   }
   .cards:not(#row-special) .cost:has(> :nth-child(3)) { grid-template-rows: repeat(3, var(--cost-size)); }
   .cards:not(#row-special) .cost:has(> :nth-child(4)) { grid-template-rows: repeat(4, var(--cost-size)); }
   .bank { gap: 7px; min-height: 51px; }
-  .bank > strong { font-size: 10px; }
+  .bank > strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .bank-pool { width: min(100%, 360px); }
   .tok { --ball-size: clamp(28px, 8.5vw, 35px); }
   .collection-row { gap: 7px; }
 }
@@ -752,14 +800,15 @@ button:disabled { cursor: default; }
   .dock-summary { gap: 4px; }
   .dock-meta { display: none; }
   .card .cost { padding-inline: 2px 1px; }
-  .bank-pool { gap: 6px; }
+  .bank-token-label { font-size: 10px; }
   #status { font-size: 9px; }
   .me-head .btns button { min-width: 33px; padding-inline: 4px; }
 }
 @media (max-height: 560px) {
-  :root { --rival-dock-h: calc(94px + var(--safe-t)); --me-dock-h: calc(103px + var(--safe-b)); }
   .bank { min-height: 43px; padding-block: 4px; }
   .tok { --ball-size: 29px; }
+  .arena-hud { min-height: 27px; padding-block: 2px; }
+  .me-mid { margin-block: 2px; gap: 4px 7px; }
   .rowwrap { min-height: 86px; }
   .action-popup { top: max(118px, 28vh); }
 }
@@ -779,14 +828,30 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 #modal .sound-control { margin-top: 12px; }
 .match-log p { margin: 4px 0; }
 .action-popup { overflow: hidden; isolation: isolate; }
-.action-popup[data-kind="rare"], .action-popup.is-evolution { padding: 10px 20px; }
+.action-popup[data-kind="rare"], .action-popup.is-evolution {
+  padding: 10px 18px; border-width: 2px;
+  background: radial-gradient(ellipse at 12% 25%, color-mix(in srgb, var(--fx) 29%, #101d32), #111c32 64%);
+  box-shadow: 0 9px 27px #000b, 0 0 24px color-mix(in srgb, var(--fx) 70%, transparent),
+    inset 0 0 19px color-mix(in srgb, var(--fx) 25%, transparent);
+}
 .action-popup[data-kind="rare"] img, .action-popup.is-evolution img:not(.old-art) { width: 65px; height: 60px; }
-.action-popup[data-kind="rare"]::after, .action-popup.is-evolution::after {
+.fx-portrait { position: relative; display: grid; place-items: center; isolation: isolate; }
+.action-popup:is([data-kind="rare"], .is-evolution) .fx-portrait::before {
+  content: ''; position: absolute; z-index: -1; inset: -8px; border-radius: 50%;
+  background: repeating-conic-gradient(from 36deg, transparent 0 24deg, color-mix(in srgb, var(--fx) 75%, #fff) 28deg 34deg, transparent 40deg 45deg);
+  mask-image: radial-gradient(circle, #000 10%, transparent 71%);
+  animation: portrait-rays .72s ease-out both;
+}
+.action-popup::after {
   content: ''; position: absolute; pointer-events: none; z-index: -1; inset: 0;
-  background: linear-gradient(106deg, transparent 28%, #ffffff40 47%, transparent 66%);
-  animation: foil-sweep .7s ease-out both;
+  background: linear-gradient(106deg, transparent 22%, #ffffff2b 39%, #fff3 47%, transparent 66%);
+  animation: foil-sweep .65s ease-out both;
+}
+.action-popup[data-kind="rare"]::after, .action-popup.is-evolution::after {
+  background: linear-gradient(106deg, transparent 19%, #ffe99438 35%, #ffffff5a 46%, #b7aaff38 54%, transparent 69%);
 }
 @keyframes foil-sweep { from { translate: -100% 0; } to { translate: 100% 0; } }
+@keyframes portrait-rays { from { scale: .55; rotate: -28deg; opacity: 1; } to { scale: 1.18; rotate: 33deg; opacity: .6; } }
 .fx-card {
   position: absolute; top: 0; left: 0; width: 46px; height: 49px;
   margin: -24px -23px; padding: 3px; border: 1px solid var(--fx); border-radius: 7px;
@@ -794,7 +859,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 }
 .fx-card img { width: 100%; height: 100%; object-fit: contain; }
 @media (max-width: 540px) {
-  :root { --card-ratio: .99; --rival-dock-h: calc(100px + var(--safe-t)); --me-dock-h: calc(128px + var(--safe-b)); }
+  :root { --card-ratio: .99; }
   #lobby .panel { padding: 11px 12px; }
   .rival .seg button { padding-block: 8px; }
   .rival .seg button:nth-child(5) { grid-column: span 2; }
@@ -802,13 +867,6 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 }
 @media (max-height: 760px) and (min-width: 541px) {
   .cards .card { max-width: clamp(100px, calc((100dvh - 338px) / 4 * var(--card-ratio)), 132px); }
-}
-@media (max-height: 560px) {
-  :root { --rival-dock-h: calc(84px + var(--safe-t)); --me-dock-h: calc(107px + var(--safe-b)); }
-  .collection-strip { min-height: 41px; max-height: 41px; }
-  .collection-card, .collection-card.has-evo, .empty-collection { height: 38px; }
-  .collection-card { grid-template-rows: 20px minmax(0, 1fr) 10px; }
-  .rowwrap { min-height: 74px; }
 }
 
 .broadcast {
@@ -827,19 +885,30 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 .odds-info { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 1px 7px; }
 #odds-call { color: #ecf1fa; font-size: 11px; }
 #odds-samples { color: #b3c4d9; font-size: 10px; }
-@media (min-width: 680px) and (max-height: 560px) {
-  .playfield:has(#broadcast:not(.hidden)) {
-    display: grid; grid-template-columns: minmax(290px, 2fr) minmax(0, 3fr);
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
+@media (min-width: 550px) and (max-height: 560px) {
+  .player-dock {
+    display: grid; grid-template-columns: minmax(166px, 37%) minmax(0, 1fr);
+    align-content: center; align-items: center; gap: 3px 10px;
   }
-  .playfield:has(#broadcast:not(.hidden)) > :is(.arena-hud, .broadcast, #coach-bar, .bank) { grid-column: 1; }
-  .playfield:has(#broadcast:not(.hidden)) #coach-bar { align-self: start; }
-  .playfield:has(#broadcast:not(.hidden)) .bank { grid-row: 4; }
-  .playfield:has(#broadcast:not(.hidden)) .board { grid-area: 1 / 2 / -1 / 3; }
-  .playfield:has(#broadcast:not(.hidden)) .rowwrap { grid-template-columns: 1fr; gap: 3px; padding-inline: 5px; }
-  .playfield:has(#broadcast:not(.hidden)) .rowlabel { display: flex; align-items: center; justify-content: space-between; }
-  .playfield:has(#broadcast:not(.hidden)) .cards .card { max-width: 132px; }
-  .playfield:has(#broadcast:not(.hidden)) #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
+  .dock-summary, .me-head { grid-area: 1 / 1; }
+  .player-dock .score-track { grid-area: 2 / 1; }
+  .me-mid { grid-area: 3 / 1; }
+  .player-dock .collection-row { grid-area: 1 / 2 / 3 / 3; margin-top: 0; }
+  .me .collection-row { grid-row-end: 4; }
+  .playfield {
+    display: grid; grid-template-columns: minmax(222px, 2fr) minmax(0, 3fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .arena-info { grid-area: 1 / 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .bank { grid-area: 2 / 1; }
+  .bank > strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .bank-pool { width: 100%; gap: 2px; grid-template-columns: 4fr 3fr 3fr 3fr 4fr 4fr; }
+  .bank-token-label { font-size: 9px; }
+  .board { grid-area: 1 / 2 / -1 / 3; }
+  .rowwrap { grid-template-columns: 1fr; gap: 3px; padding-inline: 5px; }
+  .rowlabel { display: flex; align-items: center; justify-content: space-between; }
+  .cards .card { --cost-size: 24px; max-width: 132px; }
+  #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
 }
 @media (max-height: 560px) {
   .broadcast { margin-bottom: 2px; padding-block: 2px; }
@@ -886,6 +955,10 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   #coach-open, #rival-intent { padding-inline: 6px; }
   .lesson-tile { padding: 5px; gap: 4px; }
   .lesson-tile img { width: 34px; height: 34px; }
+}
+@media (max-width: 540px) and (max-height: 560px) {
+  #odds-samples { display: none; }
+  #coach-bar { padding-block: 3px; }
 }
 </style>
 </head>
@@ -959,22 +1032,24 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   </section>
 
   <main class="playfield">
-    <div class="arena-hud">
-      <span id="round-tag">라운드 1</span>
-      <span id="turn-tag" role="status" tabindex="-1">내 차례</span>
-      <span id="arena-feed"></span>
+    <div class="arena-info">
+      <div class="arena-hud">
+        <span id="round-tag">라운드 1</span>
+        <span id="turn-tag" role="status" tabindex="-1">내 차례</span>
+        <span id="arena-feed"></span>
+      </div>
+      <aside id="broadcast" class="broadcast hidden" aria-label="실시간 승률 중계">
+        <div class="odds-line"><strong><small>나</small> <span id="odds-me">—</span></strong>
+          <b id="odds-swing">예상 승률</b><strong><span id="odds-rival">—</span> <small>상대</small></strong></div>
+        <div id="odds-track" class="odds-track pending" aria-hidden="true"><span></span></div>
+        <div class="odds-info"><span id="odds-call"></span><small id="odds-samples"></small></div>
+      </aside>
+      <aside id="coach-bar" class="hidden" aria-label="훈련 코치">
+        <div aria-live="polite"><small id="coach-caption"></small><strong id="coach-tip"></strong></div>
+        <button id="coach-open" class="ghost" type="button" disabled>수 읽기</button>
+        <button id="rival-intent" class="ghost" type="button" aria-pressed="false" disabled>상대의도</button>
+      </aside>
     </div>
-    <aside id="broadcast" class="broadcast hidden" aria-label="실시간 승률 중계">
-      <div class="odds-line"><strong><small>나</small> <span id="odds-me">—</span></strong>
-        <b id="odds-swing">예상 승률</b><strong><span id="odds-rival">—</span> <small>상대</small></strong></div>
-      <div id="odds-track" class="odds-track pending" aria-hidden="true"><span></span></div>
-      <div class="odds-info"><span id="odds-call"></span><small id="odds-samples"></small></div>
-    </aside>
-    <aside id="coach-bar" class="hidden" aria-label="훈련 코치">
-      <div aria-live="polite"><small id="coach-caption"></small><strong id="coach-tip"></strong></div>
-      <button id="coach-open" class="ghost" type="button" disabled>수 읽기</button>
-      <button id="rival-intent" class="ghost" type="button" aria-pressed="false" disabled>상대의도</button>
-    </aside>
     <div id="board" class="board" aria-label="포켓몬 시장">
       <section class="rowwrap rare-row" aria-labelledby="label-special"><div class="rowlabel" id="label-special"><strong>전설·환상 / 희귀</strong></div><div class="cards" id="row-special"></div></section>
       <section class="rowwrap tier-3" aria-labelledby="label-3"><div class="rowlabel"><strong id="label-3">3단계</strong><button class="deck-button" id="deck-3" data-focus="deck-3" data-sound="none" type="button"></button></div><div class="cards" id="row-3"></div></section>
@@ -1003,7 +1078,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
     </div>
     <div class="collection-row">
       <div class="collection-group owned-group">
-        <div class="collection-title">획득 <b id="me-owned-count">0</b></div>
+        <div class="collection-title"><button id="me-library" class="collection-link" type="button" aria-haspopup="dialog" disabled>획득 <b id="me-owned-count">0</b></button></div>
         <div id="me-owned" class="collection-strip"></div>
       </div>
       <div class="collection-group kept-group">
@@ -2815,6 +2890,7 @@ function collectionCardNode(c, opts = {}) {
     kept: Boolean(opts.kept),
     actionable,
     canEvolve: opts.evolutionIds?.has(c.id),
+    back: opts.back,
   });
   return n;
 }
@@ -2862,6 +2938,11 @@ function showCardDetail(c, opts = {}) {
   wrap.querySelector('.detail-close').onclick = closeModal;
   const action = wrap.querySelector('.detail-action');
   if (action) action.onclick = () => { closeModal(); onCardTap(c); };
+  if (opts.back) {
+    const back = el('button', 'ghost big', '획득 목록으로');
+    back.onclick = opts.back;
+    wrap.appendChild(back);
+  }
   if (opts.canEvolve) wrap.querySelector('.evolution-detail h4').textContent = '진화 조건 · 충족';
   openModal(wrap);
 }
@@ -2877,6 +2958,23 @@ function renderCollection(selector, cards, opts = {}) {
   for (const c of cards) strip.appendChild(collectionCardNode(c, opts));
   strip.scrollLeft = offset;
 }
+
+function showOwnedCards() {
+  const me = G.players[ME];
+  if (!me.board.length) return;
+  const box = el('section', 'collection-gallery');
+  const head = el('header');
+  const close = el('button', 'ghost', '닫기');
+  close.onclick = closeModal;
+  head.append(el('h3', '', `내 획득 카드 ${me.board.length}장`), close);
+  const grid = el('div', 'collection-gallery-grid');
+  const opts = { side: 'me', owner: me.name, showEvolution: true, back: showOwnedCards };
+  grid.append(...me.board.map(card => collectionCardNode(card, opts)));
+  box.append(head, grid);
+  openModal(box);
+}
+
+$('#me-library').onclick = showOwnedCards;
 
 function renderMarketRow(selector, cards, interactive, me, bon) {
   const row = $(selector);
@@ -2920,7 +3018,11 @@ function renderBank(interactive) {
       button.dataset.sound = 'none';
       button.append(el('span', 'ball-count tok-count'), el('span', 'badge hidden'));
       if (color !== 'm') button.onclick = () => onTokenTap(color);
-      pool.appendChild(button);
+      const slot = el('div', 'bank-slot');
+      const label = el('span', 'bank-token-label', BALL[color].name);
+      label.setAttribute('aria-hidden', 'true');
+      slot.append(button, label);
+      pool.appendChild(slot);
     }
   }
   for (const color of ALL_COLORS) {
@@ -2992,6 +3094,8 @@ function render() {
   $('#me-bonus').innerHTML = '<span class="lb">보너스</span>' +
     (tokenPips(meBonus) || '<span class="lb">없음</span>');
   $('#me-owned-count').textContent = me.board.length;
+  $('#me-library').disabled = !me.board.length;
+  $('#me-library').setAttribute('aria-label', `획득 카드 ${me.board.length}장 모두 보기`);
   $('#me-kept-count').textContent = me.hand.length;
   const evolutionIds = myTurn ? new Set(evolutions(G, me).map(evo => evo.from)) : null;
   renderCollection('#me-owned', me.board, { side: 'me', owner: me.name, showEvolution: true, evolutionIds });
@@ -3414,7 +3518,10 @@ async function finishTurn() {
   busy = false;
   render();
   if (G.over) return showResult();
-  if (!lastRound && G.finalRound) playSound('final');
+  if (!lastRound && G.finalRound) {
+    burst(centerOf($('#round-tag')), '#ffcb56', 12, 64);
+    playSound('final');
+  }
   if (G.turn === ME) playSound('turn');
   step();
 }
@@ -3576,7 +3683,7 @@ function showResult() {
   controls.append(again, alternate);
   box.appendChild(controls);
   openModal(box, true);
-  if (won) celebrate();
+  if (won) celebrate(box);
   playSound(won ? 'victory' : 'defeat');
 }
 
@@ -3659,20 +3766,64 @@ const SOUND = {
   tap: { notes: [510], type: 'sine', length: .065, level: .10 },
   select: { notes: [740, 1110], type: 'sine', step: .035, length: .09, level: .16 },
   remove: { notes: [540, 330], type: 'sine', step: .035, length: .08, level: .12 },
-  start: { notes: [392, 523, 659, 784], type: 'triangle', step: .065, length: .15, level: .19 },
-  turn: { notes: [570, 855], type: 'sine', step: .075, length: .12, level: .12 },
-  coin: { notes: [660, 880, 1320], type: 'sine', step: .052, length: .13, level: .21 },
-  reserve: { notes: [294, 392, 587], type: 'triangle', step: .058, length: .17, level: .20 },
-  card: { notes: [220, 440, 587, 880], type: 'triangle', step: .060, length: .18, level: .21 },
-  rare: { notes: [262, 392, 523, 784, 1047], type: 'triangle', step: .085, length: .25, level: .22 },
-  evolution: { notes: [294, 392, 494, 587, 784, 1175], type: 'triangle', step: .082, length: .25, level: .21 },
-  final: { notes: [440, 523, 659], type: 'triangle', step: .08, length: .17, level: .17 },
-  victory: { notes: [392, 494, 587, 784, 880, 988, 1175], type: 'triangle', step: .105, length: .24, level: .23 },
-  defeat: { notes: [523, 440, 349, 262], type: 'sine', step: .125, length: .27, level: .21 },
+  start: { notes: [392, 523, 659, 784], type: 'triangle', step: .067, length: .18, level: .18, bass: 108, chord: [523, 659, 1047] },
+  turn: { notes: [570, 855], type: 'sine', step: .064, length: .14, level: .12 },
+  coin: { notes: [660, 988, 1318], type: 'sine', step: .044, length: .15, level: .18, chimes: [1976, 2637] },
+  reserve: { notes: [330, 494, 740], type: 'triangle', step: .057, length: .17, level: .17, bass: 143, chimes: [1480, 1865] },
+  card: { notes: [262, 392, 659, 784], type: 'triangle', step: .055, length: .18, level: .20, bass: 125, chord: [523, 659, 1047], noise: .07 },
+  rare: { notes: [262, 392, 523, 784, 1047], type: 'triangle', step: .073, length: .22, level: .20, bass: 112, chord: [523, 659, 784, 1047], chimes: [1568, 2093, 2637], noise: .12 },
+  evolution: { notes: [294, 440, 587, 740, 880, 1175], type: 'triangle', step: .078, length: .23, level: .20, bass: 90, chord: [587, 740, 880, 1175], chimes: [1760, 2349, 2960], noise: .10 },
+  final: { notes: [220, 220, 440, 659], type: 'triangle', step: .082, length: .20, level: .18, bass: 81, chord: [440, 523, 659], noise: .07 },
+  victory: { notes: [392, 494, 587, 784, 880, 988, 1175], type: 'triangle', step: .098, length: .24, level: .22, bass: 98, chord: [587, 740, 988, 1175], chimes: [1568, 1976, 2349], noise: .09 },
+  defeat: { notes: [523, 440, 349, 262], type: 'sine', step: .118, length: .26, level: .18, bass: 111, chord: [131, 156, 262] },
 };
 let soundEnabled = true;
 try { soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off'; } catch (_) {}
 let audioEngine = null;
+
+function playTone(context, output, pitch, time, length, level, type, endPitch = pitch) {
+  const tone = context.createOscillator();
+  const envelope = context.createGain();
+  tone.type = type;
+  tone.frequency.setValueAtTime(pitch, time);
+  tone.frequency.exponentialRampToValueAtTime(endPitch, time + length);
+  envelope.gain.setValueAtTime(.001, time);
+  envelope.gain.exponentialRampToValueAtTime(level, time + .012);
+  envelope.gain.exponentialRampToValueAtTime(.001, time + length);
+  tone.connect(envelope).connect(output);
+  tone.start(time);
+  tone.stop(time + length + .012);
+}
+
+function createSoundNoise(context) {
+  const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * .17), context.sampleRate);
+  const data = buffer.getChannelData(0);
+  const rand = rng(572961);
+  for (let i = 0; i < data.length; i++) data[i] = rand() * 2 - 1;
+  return buffer;
+}
+
+function scheduleSound(context, output, cue, start, noise) {
+  const { notes, type, length, level, step = 0 } = cue;
+  notes.forEach((pitch, i) => playTone(context, output, pitch, start + i * step, length, level, type));
+  const last = start + (notes.length - 1) * step;
+  if (cue.bass) playTone(context, output, cue.bass, start, .24, .24, 'sine', cue.bass * .48);
+  cue.chord?.forEach(pitch => playTone(context, output, pitch, last, .32, .062, 'triangle'));
+  cue.chimes?.forEach((pitch, i) => playTone(context, output, pitch, last + i * .047, .21, .066, 'sine'));
+  if (!cue.noise) return;
+  const source = context.createBufferSource();
+  const filter = context.createBiquadFilter();
+  const envelope = context.createGain();
+  source.buffer = noise;
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1150, start);
+  filter.frequency.exponentialRampToValueAtTime(3600, start + .11);
+  envelope.gain.setValueAtTime(.001, start);
+  envelope.gain.exponentialRampToValueAtTime(cue.noise, start + .025);
+  envelope.gain.exponentialRampToValueAtTime(.001, start + .16);
+  source.connect(filter).connect(envelope).connect(output);
+  source.start(start);
+}
 
 function playSound(kind) {
   if (!soundEnabled) return;
@@ -3682,28 +3833,17 @@ function playSound(kind) {
     if (!audioEngine) {
       const context = new Audio();
       const volume = context.createGain();
+      const limiter = context.createDynamicsCompressor();
+      limiter.threshold.value = -15;
+      limiter.ratio.value = 5;
       volume.gain.value = .7;
-      volume.connect(context.destination);
-      audioEngine = { context, volume };
+      limiter.connect(volume).connect(context.destination);
+      audioEngine = { context, volume, limiter, noise: createSoundNoise(context) };
     }
-    const { context, volume } = audioEngine;
-    const { notes, type, length, level, step = 0 } = SOUND[kind];
+    const { context, limiter, noise } = audioEngine;
     const queue = () => {
       if (!soundEnabled || context.state !== 'running') return;
-      const start = context.currentTime + .012;
-      notes.forEach((pitch, index) => {
-        const time = start + index * step;
-        const osc = context.createOscillator();
-        const envelope = context.createGain();
-        osc.type = type;
-        osc.frequency.value = pitch;
-        envelope.gain.setValueAtTime(.001, time);
-        envelope.gain.exponentialRampToValueAtTime(level, time + .012);
-        envelope.gain.exponentialRampToValueAtTime(.001, time + length);
-        osc.connect(envelope).connect(volume);
-        osc.start(time);
-        osc.stop(time + length + .014);
-      });
+      scheduleSound(context, limiter, SOUND[kind], context.currentTime + .012, noise);
     };
     if (context.state === 'running') queue();
     else context.resume().then(queue).catch(() => {});
@@ -3773,7 +3913,11 @@ function showAction({ label, title, detail, color, card, from, balls, kind }) {
   cue.dataset.kind = kind;
 
   if (from) cue.append(imageOf(from, 'old-art'), el('span', 'fx-arrow', '→'));
-  if (card) cue.appendChild(imageOf(card));
+  if (card) {
+    const portrait = el('span', 'fx-portrait');
+    portrait.appendChild(imageOf(card));
+    cue.appendChild(portrait);
+  }
   if (balls?.length) cue.appendChild(el('span', 'fx-balls', balls.map(ball => pball(ball)).join('')));
   if (!card && !balls?.length) cue.appendChild(el('span', 'fx-seal', '✦'));
 
@@ -3792,10 +3936,11 @@ function showAction({ label, title, detail, color, card, from, balls, kind }) {
   cue.classList.remove('hidden');
 
   cueAnimation?.cancel();
-  if (!motion.matches) cueAnimation = cue.animate([
-    { opacity: 0, translate: '0 8px', scale: .96 },
+  if (!motion.matches) cueAnimation = cue.animate?.([
+    { opacity: 0, translate: '0 11px', scale: .9 },
+    { opacity: 1, translate: '0 -2px', scale: 1.025, offset: .63 },
     { opacity: 1, translate: '0 0', scale: 1 },
-  ], { duration: 190, easing: 'cubic-bezier(.17,.8,.24,1)' });
+  ], { duration: 240, easing: 'cubic-bezier(.17,.8,.24,1)' });
   clearTimeout(actionTimer);
   actionTimer = setTimeout(() => cue.classList.add('hidden'), kind === 'evolution' ? 1240 : 1020);
 }
@@ -3817,7 +3962,7 @@ function cardCenter(node) {
 }
 
 function fxPiece(cls, color, frames, options, child) {
-  if (motion.matches) return;
+  if (motion.matches || !Element.prototype.animate) return;
   const piece = el('span', cls);
   piece.style.setProperty('--fx', color);
   if (child) piece.appendChild(child);
@@ -3826,30 +3971,55 @@ function fxPiece(cls, color, frames, options, child) {
   animation.finished.then(() => piece.remove(), () => piece.remove());
 }
 
-function burst(point, color, count = 9, radius = 51) {
+function fxAt(point, pose = '') {
+  return `translate(${point.x}px,${point.y}px) ${pose}`;
+}
+
+function burst(point, color, count = 9, radius = 51, delay = 0, accent = color) {
   if (!point || motion.matches) return;
-  const origin = 'translate(' + point.x + 'px,' + point.y + 'px)';
   fxPiece('fx-ring', color, [
-    { transform: origin + ' scale(.36)', opacity: .85 },
-    { transform: origin + ' scale(' + radius / 35 + ')', opacity: 0 },
-  ], { duration: 370, easing: 'ease-out' });
+    { transform: fxAt(point, 'scale(.28)'), opacity: 0 },
+    { opacity: .9, offset: .12 },
+    { transform: fxAt(point, `scale(${radius / 35})`), opacity: 0 },
+  ], { duration: 360, delay, easing: 'ease-out' });
   for (let i = 0; i < count; i++) {
     const angle = 2 * Math.PI * i / count;
-    const distance = radius * (.63 + Math.random() * .54);
-    fxPiece('fx-spark', color, [
-      { transform: origin + ' scale(.7)', opacity: 1 },
-      { transform: 'translate(' + (point.x + Math.cos(angle) * distance) + 'px,' + (point.y + Math.sin(angle) * distance) + 'px) rotate(105deg) scale(.55)', opacity: 0 },
-    ], { duration: 390 + i * 9, easing: 'ease-out' });
+    const distance = radius * (.57 + Math.random() * .68);
+    const end = { x: point.x + Math.cos(angle) * distance, y: point.y + Math.sin(angle) * distance };
+    const star = i % 3 === 0;
+    fxPiece(star ? 'fx-star' : 'fx-spark', i % 2 ? color : accent, [
+      { transform: fxAt(point, 'scale(.36)'), opacity: 0 },
+      { opacity: .98, offset: .18 },
+      { transform: fxAt(end, 'rotate(95deg) scale(.55)'), opacity: 0 },
+    ], { duration: 320 + i * 11, delay: delay + i * 5, easing: 'ease-out' });
   }
+}
+
+function foilBlast(point, color, accent) {
+  if (!point || motion.matches) return;
+  fxPiece('fx-aura', color, [
+    { transform: fxAt(point, 'scale(.55) rotate(-16deg)'), opacity: 0 },
+    { opacity: .75, offset: .2 },
+    { transform: fxAt(point, 'scale(2) rotate(38deg)'), opacity: 0 },
+  ], { duration: 730, easing: 'ease-out' });
+  burst(point, color, 18, 106, 0, accent);
+  burst(point, accent, 9, 142, 135, '#fff4ca');
 }
 
 function fling(from, to, color, delay = 0) {
   if (!from || !to || motion.matches) return;
-  fxPiece('fx-orb', color, [
-    { transform: 'translate(' + from.x + 'px,' + from.y + 'px) scale(.8)', opacity: 0 },
-    { transform: 'translate(' + ((from.x + to.x) / 2 + 28) + 'px,' + ((from.y + to.y) / 2 - 17) + 'px) scale(1.1)', opacity: 1, offset: .53 },
-    { transform: 'translate(' + to.x + 'px,' + to.y + 'px) scale(.35)', opacity: 0 },
-  ], { duration: 454, delay, easing: 'ease-in-out' });
+  const arc = { x: (from.x + to.x) / 2 + 28, y: (from.y + to.y) / 2 - 17 };
+  const travel = [
+    { transform: fxAt(from, 'scale(.82)'), opacity: 0 },
+    { transform: fxAt(arc, 'scale(1.16)'), opacity: 1, offset: .47 },
+    { transform: fxAt(to, 'scale(.42)'), opacity: 0 },
+  ];
+  const duration = 420;
+  for (const offset of [34, 68]) {
+    fxPiece('fx-trail', color, travel, { duration, delay: delay + offset, easing: 'ease-in-out' });
+  }
+  fxPiece('fx-orb', color, travel, { duration, delay, easing: 'ease-in-out' });
+  burst(to, color, 3, 22, delay + duration - 70, '#fff1ac');
 }
 
 function actorTarget(player) {
@@ -3861,12 +4031,13 @@ function flyCard(from, player, card, color, kept = false) {
   const prefix = player.id === ME ? 'me' : 'rival';
   const to = centerOf($('#' + prefix + (kept ? '-kept' : '-owned')));
   if (!to) return;
-  const position = (point, pose) => 'translate(' + point.x + 'px,' + point.y + 'px) ' + pose;
+  const arc = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 - 52 };
   fxPiece('fx-card', color, [
-    { transform: position(from, 'scale(.92) rotate(-10deg)'), opacity: 0 },
-    { transform: position({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 - 52 }, 'scale(1.19) rotate(12deg)'), opacity: 1, offset: .47 },
-    { transform: position(to, 'scale(.48) rotate(0deg)'), opacity: 0 },
+    { transform: fxAt(from, 'scale(.92) rotate(-12deg)'), opacity: 0 },
+    { transform: fxAt(arc, 'scale(1.38) rotate(16deg)'), opacity: 1, offset: .47 },
+    { transform: fxAt(to, 'scale(.48) rotate(0deg)'), opacity: 0 },
   ], { duration: 575, easing: 'cubic-bezier(.23,.61,.28,1)' }, imageOf(card));
+  burst(to, color, 6, 32, 465, '#fff0b4');
 }
 
 function scoreNote(before, player) {
@@ -3874,11 +4045,21 @@ function scoreNote(before, player) {
   return delta ? (delta > 0 ? '+' : '') + delta + '점 · ' + score(player) + ' / ' + WIN_SCORE : '';
 }
 
-function pulseScore(player) {
-  if (motion.matches) return;
-  $(player.id === ME ? '#me-score' : '#rival-score').animate([
+function pulseScore(player, delta, color) {
+  if (delta <= 0 || motion.matches) return;
+  const counter = $(player.id === ME ? '#me-score' : '#rival-score');
+  counter.animate?.([
     { scale: 1 }, { scale: 1.19, filter: 'brightness(1.42)' }, { scale: 1 },
   ], { duration: 395, easing: 'ease-out' });
+  const point = centerOf(counter);
+  if (!point) return;
+  const start = { x: point.x + 28, y: Math.max(35, point.y) };
+  const end = { x: start.x + 14, y: Math.max(17, start.y - 38) };
+  fxPiece('fx-score', color, [
+    { transform: fxAt(start, 'scale(.75)'), opacity: 0 },
+    { opacity: 1, offset: .28 },
+    { transform: fxAt(end, 'scale(1.08)'), opacity: 0 },
+  ], { duration: 760, delay: 150, easing: 'ease-out' }, el('b', '', '+' + delta));
 }
 
 function actionSources(mv) {
@@ -3912,7 +4093,7 @@ function presentMove(player, mv, sources) {
       const balls = mv.type === 'take2' ? [mv.color, mv.color] : mv.colors;
       balls.forEach((color, i) => {
         fling(sources.bank[color], target, EFFECT_COLOR[color], i * 58);
-        burst(sources.bank[color], EFFECT_COLOR[color], 5, 22);
+        burst(sources.bank[color], EFFECT_COLOR[color], 5, 27, i * 44, '#fff3b4');
       });
       event = { title: '볼 ' + balls.length + '개 획득', balls, kind: 'coin', color: own ? '#8debd1' : '#c7a9ff' };
       break;
@@ -3923,7 +4104,7 @@ function presentMove(player, mv, sources) {
       const master = sources.master > G.bank.m;
       if (master) fling(sources.bank.m, target, EFFECT_COLOR.m);
       flyCard(sources.from, player, card, EFFECT_COLOR.m, true);
-      burst(sources.from || target, EFFECT_COLOR.m, 9, 43);
+      burst(sources.from || target, EFFECT_COLOR.m, 10, 48, 0, '#b7e5ff');
       event = { title: card.label + ' 찜', card, detail: master ? '마스터볼 +1' : '', kind: 'reserve', color: EFFECT_COLOR.m };
       break;
     }
@@ -3932,9 +4113,9 @@ function presentMove(player, mv, sources) {
       const rare = card.tier === 'L' || card.tier === 'R';
       const color = rare ? '#ffe18d' : EFFECT_COLOR[card.color];
       flyCard(from, player, card, color);
-      burst(from || target, color, rare ? 19 : 12, rare ? 84 : 59);
+      burst(from || target, color, rare ? 17 : 13, rare ? 82 : 63, 0, '#ffe96c');
       ALL_COLORS.filter(ball => paid[ball]).forEach((ball, i) => fling(target, sources.bank[ball], EFFECT_COLOR[ball], 90 + i * 47));
-      if (score(player) > points) pulseScore(player);
+      pulseScore(player, score(player) - points, color);
       event = { title: card.label + ' 포획!', detail: scoreNote(points, player) || '영구 보너스 +' + card.bonus, card, kind: rare ? 'rare' : 'card', color };
       break;
     }
@@ -3944,7 +4125,7 @@ function presentMove(player, mv, sources) {
   }
   feed(name + ' · ' + event.title);
   showAction({ label: name, ...event });
-  if (event.kind === 'rare') burst(centerOf($('#action-popup')), event.color, 16, 103);
+  if (event.kind === 'rare') foilBlast(centerOf($('#action-popup')), event.color, '#d4a6ff');
   playSound(event.kind);
 }
 
@@ -3955,21 +4136,26 @@ function presentEvolution(player, from, card, points) {
   const color = '#d6b5ff';
   const target = actorTarget(player);
   burst(target, '#9bebfb', 9, 36);
-  if (score(player) > points) pulseScore(player);
+  pulseScore(player, score(player) - points, color);
   feed(label + ' · ' + from.label + ' → ' + card.label);
   showAction({ label, title: from.label + ' → ' + card.label, detail: scoreNote(points, player), color, card, from, kind: 'evolution' });
-  burst(centerOf($('#action-popup')), color, 22, 100);
+  foilBlast(centerOf($('#action-popup')), color, '#86efff');
   playSound('evolution');
 }
 
-function celebrate() {
+function celebrate(result) {
   if (motion.matches) return;
   const colors = ['#ffdc70', '#8df3d8', '#cbaaff', '#8bcaff', '#ff9dbb'];
-  for (let i = 0; i < 38; i++) {
+  const point = centerOf(result.querySelector('h3'));
+  if (point) {
+    foilBlast({ x: point.x - 72, y: point.y }, colors[0], colors[1]);
+    foilBlast({ x: point.x + 72, y: point.y + 14 }, colors[2], colors[3]);
+  }
+  for (let i = 0; i < 50; i++) {
     const x = innerWidth * (.12 + Math.random() * .76);
     const drift = (Math.random() - .5) * 210;
     const color = colors[i % colors.length];
-    fxPiece('fx-confetti', color, [
+    fxPiece(i % 4 ? 'fx-confetti' : 'fx-star', color, [
       { transform: 'translate(' + x + 'px,-15px) rotate(0deg)', opacity: 0 },
       { opacity: .95, offset: .16 },
       { transform: 'translate(' + (x + drift) + 'px,' + innerHeight * .86 + 'px) rotate(' + (340 + i * 23) + 'deg)', opacity: 0 },
