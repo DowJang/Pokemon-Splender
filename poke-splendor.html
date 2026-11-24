@@ -180,16 +180,21 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 /* ── 상·하단 플레이어 상태 ────────────────────────────── */
 .player-dock {
   position: relative; z-index: 2; min-width: 0; min-height: 0;
-  display: grid; grid-template-columns: clamp(96px, 25vw, 165px) minmax(0, 1fr);
-  grid-template-areas: "head resources" "collection collection"; align-items: center; gap: 3px 9px;
+  display: grid; align-items: center; gap: 3px 9px;
   padding: 4px 8px; border: 1px solid var(--line); border-radius: 11px;
   background: linear-gradient(150deg, #1a2943, #0e192f);
 }
-.rivalbar { --team: var(--rival); }
+.rivalbar {
+  --team: var(--rival);
+  grid-template-columns: clamp(82px, 23vw, 165px) minmax(0, 1fr) auto;
+  grid-template-areas: "head resources menu" "collection collection collection";
+}
 .me {
   --team: var(--arena);
-  grid-template-areas: "head controls" "resources resources" "collection collection";
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: "head controls selection" "resources resources resources" "collection collection collection";
 }
+.me .dock-head { width: min(100%, 165px); }
 .dock-head { grid-area: head; min-width: 0; }
 .dock-caption { display: flex; justify-content: space-between; gap: 4px; color: var(--team); font-size: 10px; font-weight: 850; line-height: 1.1; }
 .dock-caption small { color: var(--dim); white-space: nowrap; }
@@ -209,11 +214,19 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .me .dock-resource { display: flex; align-items: center; gap: 4px; }
 .collection-row {
   grid-area: collection;
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, min(56%, 232px)); gap: 7px; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, max-content); gap: 6px; min-width: 0;
 }
-.collection-row:has(.kept-strip .empty-collection) { grid-template-columns: minmax(0, 1fr) minmax(70px, 23%); }
+.collection-row:has(.kept-group.hidden) { grid-template-columns: minmax(0, 1fr); }
 .collection-group { min-width: 0; }
-.kept-group { border-left: 1px solid var(--line); padding-left: 5px; }
+.kept-group {
+  --stack-step: clamp(4px, .9dvh, 7px);
+  display: grid; align-content: start; width: clamp(52px, 16vw, 91px); padding: 0 1px 0 5px;
+  border-left: 1px solid var(--line); border-radius: 0; background: none; text-align: right;
+}
+.kept-group .collection-title { justify-content: flex-end; }
+.kept-group:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.kept-strip { display: grid; padding: 2px 0 1px; }
+.kept-strip .collection-card { grid-area: 1 / 1; margin-top: var(--stack-offset); }
 .collection-title {
   display: flex; align-items: center; gap: 4px; min-height: 13px;
   color: var(--dim); font-size: 10px; font-weight: 750; line-height: 1.2;
@@ -224,16 +237,15 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   background: var(--m); border: 1px solid #c6a7f2; box-shadow: 0 0 6px #9f6be8aa;
 }
 .collection-strip {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 4px;
-  padding: 2px; min-height: 0; min-width: 0;
-  overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #6983a5 transparent;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-content: start;
+  gap: clamp(2px, .7vw, 5px); padding-block: 2px; min-width: 0;
 }
-.owned-group .collection-strip { display: flex; overflow: auto hidden; }
-.owned-group .collection-card { flex: 0 0 clamp(53px, 15vw, 71px); }
-.empty-collection {
-  grid-column: 1 / -1; display: grid; place-items: center; width: 100%; min-height: 21px;
-  color: #aebed6; border: 1px dashed #5c6e8b; border-radius: 7px; font-size: 11px;
+.collection-strip .empty-color {
+  background: color-mix(in srgb, var(--ball-color) 20%, #14223a);
+  border: 1px dashed color-mix(in srgb, var(--ball-color) 50%, #697b96);
+  box-shadow: none;
 }
+.collection-quantity { flex: none; margin-left: 1px; font-size: 8px; }
 .collection-card {
   position: relative; width: 100%; min-width: 0; height: var(--mini-card-h); padding: 0;
   display: grid; grid-template-rows: 24px minmax(0, 1fr) 14px;
@@ -262,8 +274,7 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .bank { display: flex; justify-content: center; gap: 4px; padding: 2px 6px; background: var(--bg2); border-top: 1px solid var(--line); flex: none; }
 
 /* ── 내 조작 ──────────────────────────────────────── */
-.dock-controls { grid-area: controls; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; }
-.dock-selection { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-height: 17px; min-width: 0; }
+.dock-selection { grid-area: selection; display: flex; align-items: center; gap: 4px; min-width: 0; }
 #status {
   min-width: 0; font-size: 11px; font-weight: 750; color: #dbe7fa;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -271,11 +282,11 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .picks { display: flex; gap: 3px; flex: none; }
 .picks:empty { display: none; }
 .picks .pip { --ball-size: 15px; }
-.dock-controls .btns { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: 4px; }
-.dock-controls .btns button {
+.dock-controls { grid-area: controls; display: grid; grid-template-columns: 1fr 1.2fr; gap: 4px; }
+.dock-controls button {
   min-width: 28px; min-height: 28px; padding: 3px 7px; font-size: 11px; border-radius: 6px; line-height: 1.25; white-space: nowrap;
 }
-#menu { min-width: 28px; }
+#menu { grid-area: menu; align-self: start; min-width: 30px; min-height: 28px; border-radius: 6px; }
 
 /* ── 모달 / 토스트 ─────────────────────────────────── */
 .modal { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; padding: 16px; z-index: 50; }
@@ -407,7 +418,7 @@ button:disabled { cursor: default; }
 .ghost:hover:enabled { background: #203751; border-color: #7691af; }
 
 #lobby { max-width: 650px; padding-top: max(17px, var(--safe-t)); }
-.lobby-tools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.lobby-tools { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }
 .sound-control { padding: 6px 11px; border-radius: 8px; font-size: 12px; font-weight: 750; }
 .sound-control[aria-pressed="false"] { color: var(--dim); }
 .hero {
@@ -489,7 +500,6 @@ button:disabled { cursor: default; }
 }
 .collection-title { color: #bac8df; }
 .collection-title b { color: var(--team); }
-.empty-collection { color: #a0b1cd; border-color: #4e607c; }
 .collection-art { filter: drop-shadow(0 1px 1px #10233e60); }
 .collection-card { background: linear-gradient(180deg, #e4eff8 76%, #fff); }
 .player-dock .collection-card {
@@ -500,6 +510,8 @@ button:disabled { cursor: default; }
 .player-dock .collection-card .ribbon { grid-area: 1 / 1 / 2 / -1; align-self: stretch; padding-inline: 2px; font-size: 9px; }
 .player-dock .collection-art { grid-area: 2 / 1; width: 95%; height: 100%; }
 .player-dock .collection-name { grid-area: 2 / 2; padding-inline: 1px; font-size: 9px; line-height: 1.1; }
+.collection-name.has-quantity { display: flex; align-items: center; justify-content: center; }
+.collection-name.has-quantity > span { overflow: hidden; text-overflow: ellipsis; }
 
 .arena-hud {
   display: flex; align-items: center; gap: 6px; min-height: 26px;
@@ -696,6 +708,9 @@ button:disabled { cursor: default; }
 .collection-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(67px, 1fr)); gap: 7px; }
 .collection-gallery-grid .collection-card { width: 100%; height: 74px; }
 .collection-gallery-grid .collection-name { font-size: 11px; }
+.kept-gallery .collection-gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kept-gallery .collection-card { height: clamp(80px, 16dvh, 134px); }
+.audio-controls { display: flex; flex-wrap: wrap; gap: 6px; }
 
 #effects {
   position: fixed; z-index: 65; inset: 0; pointer-events: none; overflow: hidden;
@@ -777,7 +792,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 #lobby .panel { margin-bottom: 11px; }
 #lobby .foot a { color: #afdcff; }
 #myname { font: inherit; }
-.dock-controls .btns .ghost:disabled { opacity: .5; }
+.dock-controls .ghost:disabled { opacity: .5; }
 .collection-card.evo-ready { outline: 1px solid #d1aeff; box-shadow: 0 0 8px #d1aeff77; }
 #coach-bar > div { flex: 1; }
 #modal .sound-control { margin-top: 12px; }
@@ -835,10 +850,6 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 #odds-call { color: #ecf1fa; font-size: 10px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #odds-samples { color: #b3c4d9; font-size: 9px; flex: none; }
 @media (min-width: 620px) {
-  .me {
-    grid-template-columns: minmax(100px, 22%) minmax(0, 1fr) auto;
-    grid-template-areas: "head resources controls" "collection collection collection";
-  }
   .me .dock-resources { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
   .me .dock-resources .pip { --ball-size: 17px; }
 }
@@ -848,7 +859,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   .resource-values { gap: 1px; }
   .resource-name { font-size: 9px; gap: 3px; }
   .dock-score small { font-size: 9px; }
-  .dock-controls .btns button { padding-inline: 5px; }
+  .dock-controls button { padding-inline: 5px; }
   #status { font-size: 10px; }
   .rowwrap { padding: 2px 3px; gap: 3px; border-radius: 6px; }
   .card .ribbon { padding-inline: 2px; }
@@ -870,12 +881,13 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   .bank { min-height: 36px; padding-block: 2px; }
   .bank-token-label { font-size: 9px; }
   .tok { --ball-size: 23px; }
-  .dock-controls .btns button { min-height: 26px; }
+  .dock-controls button { min-height: 26px; }
   .action-popup { top: 33vh; }
 }
+@media (max-width: 420px) {
+  .player-dock .collection-card .evo-label .ball-token { display: none; }
+}
 @media (max-height: 520px) {
-  .collection-row:has(.kept-strip .collection-card) { grid-template-columns: minmax(0, 1fr) minmax(0, min(64%, 232px)); }
-  .player-dock .collection-group { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: 2px; }
   .player-dock .collection-title { gap: 2px; }
   .player-dock .reserve-dot { width: 6px; height: 6px; }
   .arena-info:has(#coach-bar:not(.hidden)) { grid-template-columns: auto minmax(0, 1fr) auto; gap: 3px; }
@@ -1006,15 +1018,16 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
       <div id="rival-tokens" class="dock-resource"><div class="resource-name"><span>보유 볼</span><span class="resource-limit"></span></div><div class="resource-values"></div></div>
       <div id="rival-bonus" class="dock-resource"><div class="resource-name">카드 보너스</div><div class="resource-values"></div></div>
     </div>
+    <button id="menu" class="ghost" type="button" aria-label="대전 메뉴">≡</button>
     <div class="collection-row">
       <div class="collection-group owned-group">
-        <div class="collection-title">획득 <b id="rival-owned-count">0</b></div>
+        <div class="collection-title"><button id="rival-library" class="collection-link" type="button" aria-haspopup="dialog" disabled>획득 <b id="rival-owned-count">0</b></button></div>
         <div id="rival-owned" class="collection-strip"></div>
       </div>
-      <div class="collection-group kept-group">
-        <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="rival-kept-count">0</b></div>
-        <div id="rival-kept" class="collection-strip kept-strip"></div>
-      </div>
+      <button id="rival-reserves" class="kept-group hidden" type="button" data-focus="rival-reserves" data-sound="none" aria-haspopup="dialog">
+        <span class="collection-title"><span class="reserve-dot"></span>찜 <b id="rival-kept-count">0</b></span>
+        <span id="rival-kept" class="kept-strip" aria-hidden="true"></span>
+      </button>
     </div>
   </section>
 
@@ -1055,13 +1068,10 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
       </div>
       <div class="score-track" id="me-progress" aria-hidden="true"><b></b></div>
     </header>
+    <div class="dock-selection"><div id="picks" class="picks"></div><span id="status" role="status"></span></div>
     <div class="dock-controls">
-      <div class="dock-selection"><span id="status">당신의 차례</span><div id="picks" class="picks"></div></div>
-      <div class="btns">
-        <button id="cancel" class="ghost" data-sound="none" disabled>취소</button>
-        <button id="confirm" class="primary" data-sound="none" disabled>확정</button>
-        <button id="menu" class="ghost" aria-label="대전 메뉴">≡</button>
-      </div>
+      <button id="cancel" class="ghost" type="button" data-sound="none" disabled>취소</button>
+      <button id="confirm" class="primary" type="button" data-sound="none" disabled>확정</button>
     </div>
     <div class="dock-resources">
       <div id="me-tokens" class="dock-resource"><div class="resource-name"><span>보유 볼</span><span class="resource-limit"></span></div><div class="resource-values"></div></div>
@@ -1072,10 +1082,10 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
         <div class="collection-title"><button id="me-library" class="collection-link" type="button" aria-haspopup="dialog" disabled>획득 <b id="me-owned-count">0</b></button></div>
         <div id="me-owned" class="collection-strip"></div>
       </div>
-      <div class="collection-group kept-group">
-        <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="me-kept-count">0</b></div>
-        <div id="me-kept" class="collection-strip kept-strip"></div>
-      </div>
+      <button id="me-reserves" class="kept-group hidden" type="button" data-focus="me-reserves" data-sound="none" aria-haspopup="dialog">
+        <span class="collection-title"><span class="reserve-dot"></span>찜 <b id="me-kept-count">0</b></span>
+        <span id="me-kept" class="kept-strip" aria-hidden="true"></span>
+      </button>
     </div>
   </section>
 </section>
@@ -2943,6 +2953,7 @@ function startGame(mode = null, seed) {
   $('#game').classList.remove('hidden');
   feed(training ? '코치와 함께 다음 수를 읽어 보세요' : '카드를 누르거나 볼을 선택하세요');
   playSound('start');
+  syncMusicPlayback();
   step();
   $('#board').scrollTop = 0;
   $('#turn-tag').focus({ preventScroll: true });
@@ -3016,17 +3027,18 @@ function cardNode(c) {
 function collectionCardNode(c, opts = {}) {
   const actionable = Boolean(opts.interactive);
   const evolution = opts.showEvolution && c.to && c.need;
-  const n = el('button', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}`);
-  n.type = 'button';
+  const n = el(opts.preview ? 'span' : 'button', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}`);
   n.dataset.card = c.id;
+  n.innerHTML = cardRibbon(c, Boolean(evolution)) + '<img class="collection-art" loading="lazy" alt="">' +
+    `<span class="collection-name">${c.label}</span>`;
+  n.querySelector('.collection-art').src = spriteUrl(c.dex);
+  if (opts.preview) return n;
+  n.type = 'button';
   n.dataset.focus = (opts.kept ? 'kept-' : 'owned-') + opts.side + '-' + c.id;
   const canEvolve = opts.evolutionIds?.has(c.id);
   n.classList.toggle('evo-ready', Boolean(canEvolve));
   n.title = `${c.label} · ${c.vp}점 · ${BALL[c.color].name} 보너스 ${c.bonus}${evolution ? evolutionSummary(c) : ''}${canEvolve ? ' · 진화 가능' : ''}`;
   n.setAttribute('aria-label', n.title);
-  n.innerHTML = cardRibbon(c, Boolean(evolution)) + '<img class="collection-art" loading="lazy" alt="">' +
-    `<span class="collection-name">${c.label}</span>`;
-  n.querySelector('.collection-art').src = spriteUrl(c.dex);
   n.onclick = () => showCardDetail(c, {
     owner: opts.owner,
     kept: Boolean(opts.kept),
@@ -3078,7 +3090,7 @@ function showCardDetail(c, opts = {}) {
   const action = wrap.querySelector('.detail-action');
   if (action) action.onclick = () => { closeModal(); onCardTap(c); };
   if (opts.back) {
-    const back = el('button', 'ghost big', '획득 목록으로');
+    const back = el('button', 'ghost big', '카드 목록으로');
     back.onclick = opts.back;
     wrap.appendChild(back);
   }
@@ -3086,34 +3098,66 @@ function showCardDetail(c, opts = {}) {
   openModal(wrap);
 }
 
-function renderCollection(selector, cards, opts = {}) {
-  const strip = $(selector);
-  const offset = strip.scrollLeft;
-  strip.replaceChildren();
-  if (!cards.length) {
-    strip.appendChild(el('span', 'empty-collection', '없음'));
-    return;
-  }
-  for (const c of cards) strip.appendChild(collectionCardNode(c, opts));
-  strip.scrollLeft = offset;
+function renderCollections(side, player, evolutionIds) {
+  const { board, hand } = player;
+  const library = $('#' + side + '-library');
+  $('#' + side + '-owned-count').textContent = board.length;
+  library.disabled = !board.length;
+  library.setAttribute('aria-label', `획득 카드 ${board.length}장 모두 보기`);
+  library.onclick = () => showCollection(side, player);
+  const opts = { side, owner: player.name, showEvolution: true, evolutionIds };
+  $('#' + side + '-owned').replaceChildren(...COLORS.map(color => {
+    const cards = board.filter(card => card.color === color);
+    if (!cards.length) return el('span', 'collection-card empty-color fam-' + color);
+    const card = collectionCardNode(cards.at(-1), opts);
+    if (cards.length > 1) {
+      card.title += ` · 같은 색 ${cards.length}장 모두 보기`;
+      card.setAttribute('aria-label', card.title);
+      card.setAttribute('aria-haspopup', 'dialog');
+      const name = card.querySelector('.collection-name');
+      name.classList.add('has-quantity');
+      name.replaceChildren(el('span', '', name.textContent), el('span', 'collection-quantity', '×' + cards.length));
+      card.onclick = () => showCollection(side, player, { color });
+    }
+    return card;
+  }));
+
+  const reserves = $('#' + side + '-reserves');
+  reserves.classList.toggle('hidden', !hand.length);
+  reserves.setAttribute('aria-label', `찜한 카드 ${hand.length}장 펼치기`);
+  $('#' + side + '-kept-count').textContent = hand.length;
+  const stack = $('#' + side + '-kept');
+  stack.replaceChildren(...hand.map((card, index) => {
+    const preview = collectionCardNode(card, { kept: true, preview: true });
+    preview.style.setProperty('--stack-offset', `calc(var(--stack-step) * ${index})`);
+    return preview;
+  }));
+  reserves.onclick = () => {
+    playSound('reveal');
+    showCollection(side, player, { kept: true });
+    burst(centerOf($('#modal-title')), EFFECT_COLOR.m, 7, 38);
+  };
 }
 
-function showOwnedCards() {
-  const me = G.players[ME];
-  if (!me.board.length) return;
-  const box = el('section', 'collection-gallery');
+function showCollection(side, player, { kept = false, color } = {}) {
+  const cards = kept ? player.hand.slice(0, HAND_LIMIT) : player.board.filter(card => !color || card.color === color);
+  if (!cards.length) return closeModal();
+  const box = el('section', 'collection-gallery' + (kept ? ' kept-gallery' : ''));
   const head = el('header');
-  const close = el('button', 'ghost', '닫기');
+  const close = el('button', 'ghost gallery-close', '닫기');
   close.onclick = closeModal;
-  head.append(el('h3', '', `내 획득 카드 ${me.board.length}장`), close);
+  head.append(el('h3', '', `${side === 'me' ? '내' : '상대'} ${kept ? '찜한' : '획득'} 카드 ${cards.length}장`), close);
   const grid = el('div', 'collection-gallery-grid');
-  const opts = { side: 'me', owner: me.name, showEvolution: true, back: showOwnedCards };
-  grid.append(...me.board.map(card => collectionCardNode(card, opts)));
+  const interactive = kept && side === 'me' && G.turn === ME && !G.over && !busy;
+  const opts = { side, owner: player.name, kept, interactive, showEvolution: true,
+    back: () => showCollection(side, player, { kept, color }) };
+  grid.append(...cards.map(card => collectionCardNode(card, opts)));
   box.append(head, grid);
   openModal(box);
+  if (kept && !motion.matches) grid.animate?.([
+    { opacity: .4, transform: 'scale(.95)' }, { opacity: 1, transform: 'scale(1)' },
+  ], { duration: 190, easing: 'ease-out' });
 }
-
-$('#me-library').onclick = showOwnedCards;
 
 function renderMarketRow(selector, cards, interactive, me, bon) {
   const row = $(selector);
@@ -3205,10 +3249,7 @@ function render() {
   const rivalsTurn = G.turn === rival.id && !G.over;
   rb.classList.toggle('active', rivalsTurn);
   renderPlayerStatus('rival', rival, bonuses(rival));
-  $('#rival-owned-count').textContent = rival.board.length;
-  $('#rival-kept-count').textContent = rival.hand.length;
-  renderCollection('#rival-owned', rival.board, { side: 'rival', owner: rival.name, showEvolution: true });
-  renderCollection('#rival-kept', rival.hand, { side: 'rival', owner: rival.name, kept: true, showEvolution: true });
+  renderCollections('rival', rival);
 
   renderMarketRow('#row-special', [...G.market.L, ...G.market.R], interactive, me, meBonus);
   const specialDeck = $('#deck-special');
@@ -3231,13 +3272,8 @@ function render() {
 
   $('#me').classList.toggle('active', myTurn);
   renderPlayerStatus('me', me, meBonus);
-  $('#me-owned-count').textContent = me.board.length;
-  $('#me-library').disabled = !me.board.length;
-  $('#me-library').setAttribute('aria-label', `획득 카드 ${me.board.length}장 모두 보기`);
-  $('#me-kept-count').textContent = me.hand.length;
   const evolutionIds = myTurn ? new Set(evolutions(G, me).map(evo => evo.from)) : null;
-  renderCollection('#me-owned', me.board, { side: 'me', owner: me.name, showEvolution: true, evolutionIds });
-  renderCollection('#me-kept', me.hand, { side: 'me', owner: me.name, interactive, kept: true, showEvolution: true });
+  renderCollections('me', me, evolutionIds);
 
   const picks = $('#picks');
   picks.replaceChildren(...pick.map((color, index) => {
@@ -3260,7 +3296,7 @@ function render() {
   $('#confirm').textContent = canPass ? '패스' : '확정';
   $('#confirm').disabled = !(ready || canPass);
   $('#cancel').disabled = !interactive || !pick.length;
-  $('#status').textContent = G.over ? '종료' : canPass ? '선택 가능한 행동 없음' : ready ? '확정 가능' : pick.length ? pick.length + '개 선택' : myTurn && !busy ? '선택 대기' : '';
+  $('#status').textContent = G.over ? '종료' : canPass ? '선택 가능한 행동 없음' : ready ? '확정 가능' : pick.length ? pick.length + '개 선택' : '';
   if (training) syncRivalIntent();
   if (focus && document.activeElement?.dataset.focus !== focus) focusCurrent(focus);
 }
@@ -3287,7 +3323,9 @@ function onTokenTap(c) {
   } else {
     pick.push(c);
     burst(centerOf($('#bank-' + c)), EFFECT_COLOR[c], 5, 29);
-    playSound('select');
+    const ready = Boolean(pickMove());
+    playSound(ready ? 'ready' : 'select');
+    if (ready) burst(centerOf($('#confirm')), '#ffe48a', 7, 31);
   }
   render();
 }
@@ -3306,11 +3344,19 @@ function pickMove() {
   return legal ? mv : null;
 }
 
-$('#cancel').onclick = () => { pick = []; playSound('remove'); render(); };
+$('#cancel').onclick = () => {
+  burst(centerOf($('#picks')), '#a8c9ed', 5, 22);
+  pick = [];
+  playSound('cancel');
+  render();
+};
 $('#confirm').onclick = () => {
   if (busy || G.over || G.turn !== ME) return;
   const mv = pickMove() || legalMoves(G).find(move => move.type === 'pass');
-  if (mv) doHumanMove(mv);
+  if (mv) {
+    burst(centerOf($('#confirm')), '#ffe48a', 9, 38);
+    doHumanMove(mv);
+  }
 };
 
 // ── 카드 탭 ───────────────────────────────────────────────────
@@ -3659,7 +3705,10 @@ async function finishTurn() {
     burst(centerOf($('#round-tag')), '#ffcb56', 12, 64);
     playSound('final');
   }
-  if (G.turn === ME) playSound('turn');
+  if (G.turn === ME) {
+    burst(centerOf($('#turn-tag')), '#8debd1', 6, 29);
+    playSound('turn');
+  }
   step();
 }
 
@@ -3737,7 +3786,7 @@ function openModal(node, sticky = false) {
   inner.replaceChildren(node);
   inner.scrollTop = 0;
   modal.classList.remove('hidden');
-  const firstButton = inner.querySelector('.detail-close');
+  const firstButton = inner.querySelector('.detail-close, .gallery-close');
   (firstButton || inner).focus({ preventScroll: true });
   modal.onclick = event => { if (!sticky && event.target === modal) closeModal(); };
 }
@@ -3770,6 +3819,7 @@ document.addEventListener('keydown', event => {
 });
 
 function showResult() {
+  syncMusicPlayback();
   const won = G.winner === ME;
   clearTimeout(actionTimer);
   $('#action-popup').classList.add('hidden');
@@ -3839,11 +3889,12 @@ function showMenu() {
   q.onclick = () => location.reload();
   g2.append(r, q);
   box.appendChild(g2);
-  const sound = soundControl();
   const live = el('button', 'ghost', broadcast ? '승률 중계 끄기' : '승률 중계 켜기');
   live.onclick = () => { setBroadcast(!broadcast); closeModal(); };
   g2.appendChild(live);
-  box.appendChild(sound);
+  const audioControls = el('div', 'audio-controls');
+  audioControls.append(audioControl('sound'), audioControl('music'));
+  box.appendChild(audioControls);
   const log = el('div', 'match-log');
   log.appendChild(el('h4', '', '최근 기록'));
   for (const entry of G.log.slice(-12).reverse()) {
@@ -3857,7 +3908,6 @@ function showMenu() {
   x.onclick = closeModal;
   box.appendChild(x);
   openModal(box);
-  syncSoundControls();
 }
 
 function showRules() {
@@ -3904,10 +3954,15 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const EFFECT_COLOR = Object.fromEntries(ALL_COLORS.map(color =>
   [color, getComputedStyle(document.documentElement).getPropertyValue('--' + color).trim()]));
 const SOUND_KEY = 'poke-splendor-sound-v1';
+const MUSIC_KEY = 'poke-splendor-music-v1';
 const SOUND = {
   tap: { notes: [510], type: 'sine', length: .065, level: .10 },
   select: { notes: [740, 1110], type: 'sine', step: .035, length: .09, level: .16 },
   remove: { notes: [540, 330], type: 'sine', step: .035, length: .08, level: .12 },
+  ready: { notes: [784, 988, 1319], type: 'triangle', step: .038, length: .145, level: .12 },
+  cancel: { notes: [587, 440, 294], type: 'sine', step: .032, length: .09, level: .11 },
+  reveal: { notes: [440, 659, 880], type: 'triangle', step: .044, length: .16, level: .13, chimes: [1319] },
+  pass: { notes: [440, 622], type: 'sine', step: .07, length: .17, level: .1 },
   start: { notes: [392, 523, 659, 784], type: 'triangle', step: .067, length: .18, level: .18, bass: 108, chord: [523, 659, 1047] },
   turn: { notes: [570, 855], type: 'sine', step: .064, length: .14, level: .12 },
   coin: { notes: [660, 988, 1318], type: 'sine', step: .044, length: .15, level: .18, chimes: [1976, 2637] },
@@ -3919,18 +3974,35 @@ const SOUND = {
   victory: { notes: [392, 494, 587, 784, 880, 988, 1175], type: 'triangle', step: .098, length: .24, level: .22, bass: 98, chord: [587, 740, 988, 1175], chimes: [1568, 1976, 2349], noise: .09 },
   defeat: { notes: [523, 440, 349, 262], type: 'sine', step: .118, length: .26, level: .18, bass: 111, chord: [131, 156, 262] },
 };
-let soundEnabled = true;
-try { soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off'; } catch (_) {}
+const audioSettings = {
+  sound: { key: SOUND_KEY, label: '효과음', enabled: true },
+  music: { key: MUSIC_KEY, label: '배경음악', enabled: true },
+};
+for (const setting of Object.values(audioSettings)) {
+  try { setting.enabled = localStorage.getItem(setting.key) !== 'off'; } catch (_) {}
+}
 let audioEngine = null;
+let musicSession = null;
+const MUSIC_BEAT = .58;
+const MUSIC_BARS = [
+  { chord: [48, 55, 64], melody: [72, 76, null, 79] },
+  { chord: [45, 52, 60], melody: [76, null, 72, 71] },
+  { chord: [41, 48, 57], melody: [69, 72, 76, null] },
+  { chord: [43, 50, 57], melody: [74, null, 71, null] },
+  { chord: [48, 55, 62], melody: [67, 72, null, 74] },
+  { chord: [40, 47, 55], melody: [76, 71, 67, null] },
+  { chord: [41, 48, 64], melody: [69, null, 72, 76] },
+  { chord: [43, 50, 59], melody: [74, 71, 67, null] },
+];
 
-function playTone(context, output, pitch, time, length, level, type, endPitch = pitch) {
+function playTone(context, output, pitch, time, length, level, type, endPitch = pitch, attack = .012) {
   const tone = context.createOscillator();
   const envelope = context.createGain();
   tone.type = type;
   tone.frequency.setValueAtTime(pitch, time);
   tone.frequency.exponentialRampToValueAtTime(endPitch, time + length);
   envelope.gain.setValueAtTime(.001, time);
-  envelope.gain.exponentialRampToValueAtTime(level, time + .012);
+  envelope.gain.exponentialRampToValueAtTime(level, time + attack);
   envelope.gain.exponentialRampToValueAtTime(.001, time + length);
   tone.connect(envelope).connect(output);
   tone.start(time);
@@ -3967,8 +4039,7 @@ function scheduleSound(context, output, cue, start, noise) {
   source.start(start);
 }
 
-function playSound(kind) {
-  if (!soundEnabled) return;
+function withAudio(callback) {
   const Audio = window.AudioContext || window.webkitAudioContext;
   if (!Audio) return;
   try {
@@ -3978,41 +4049,92 @@ function playSound(kind) {
       const limiter = context.createDynamicsCompressor();
       limiter.threshold.value = -15;
       limiter.ratio.value = 5;
-      volume.gain.value = .7;
-      limiter.connect(volume).connect(context.destination);
+      volume.gain.value = audioSettings.sound.enabled ? .7 : 0;
+      volume.connect(limiter).connect(context.destination);
       audioEngine = { context, volume, limiter, noise: createSoundNoise(context) };
     }
-    const { context, limiter, noise } = audioEngine;
+    const { context } = audioEngine;
     const queue = () => {
-      if (!soundEnabled || context.state !== 'running') return;
-      scheduleSound(context, limiter, SOUND[kind], context.currentTime + .012, noise);
+      if (context.state === 'running') callback(audioEngine);
     };
     if (context.state === 'running') queue();
     else context.resume().then(queue).catch(() => {});
   } catch (_) { /* 오디오 없이도 같은 흐름으로 진행한다. */ }
 }
 
-function syncSoundControls() {
-  document.querySelectorAll('.sound-control').forEach(button => {
-    button.textContent = soundEnabled ? '효과음 켜짐' : '효과음 꺼짐';
-    button.setAttribute('aria-pressed', String(soundEnabled));
+function playSound(kind) {
+  if (!audioSettings.sound.enabled) return;
+  withAudio(({ context, volume, noise }) => {
+    if (audioSettings.sound.enabled) scheduleSound(context, volume, SOUND[kind], context.currentTime + .012, noise);
   });
 }
 
-function soundControl() {
-  const button = el('button', 'ghost sound-control');
-  button.type = 'button';
-  button.dataset.sound = 'none';
-  button.onclick = toggleSound;
-  return button;
+function syncMusicPlayback() {
+  const shouldPlay = () => audioSettings.music.enabled && G && !G.over && !document.hidden;
+  if (!shouldPlay()) {
+    if (!musicSession) return;
+    const { context } = audioEngine;
+    const { timer, output } = musicSession;
+    clearInterval(timer);
+    output.gain.setTargetAtTime(0, context.currentTime, .018);
+    setTimeout(() => output.disconnect(), 100);
+    musicSession = null;
+    return;
+  }
+  if (musicSession) return;
+  withAudio(({ context, limiter }) => {
+    if (!shouldPlay() || musicSession) return;
+    const output = context.createGain();
+    output.gain.value = .21;
+    output.connect(limiter);
+    let nextBeat = context.currentTime + .38;
+    let step = 0;
+    const note = (midi, offset, length, level, type, attack) => {
+      const pitch = 440 * 2 ** ((midi - 69) / 12);
+      playTone(context, output, pitch, nextBeat + offset, length, level, type, pitch, attack);
+    };
+    const schedule = () => {
+      if (context.state !== 'running') return;
+      if (nextBeat < context.currentTime) nextBeat = context.currentTime + .03;
+      while (nextBeat < context.currentTime + .42) {
+        const bar = MUSIC_BARS[Math.floor(step / 4)];
+        const beat = step % 4;
+        if (beat === 0) bar.chord.forEach((midi, i) => note(midi, i * .024, 2.05, .09, 'sine', .27));
+        const melody = bar.melody[beat];
+        if (melody !== null) {
+          note(melody, 0, .83, .105, 'triangle', .032);
+          note(melody, .17, .69, .029, 'sine', .065);
+        }
+        step = (step + 1) % (MUSIC_BARS.length * 4);
+        nextBeat += MUSIC_BEAT;
+      }
+    };
+    schedule();
+    musicSession = { output, timer: setInterval(schedule, 180) };
+  });
 }
 
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-  try { localStorage.setItem(SOUND_KEY, soundEnabled ? 'on' : 'off'); } catch (_) {}
-  if (audioEngine) audioEngine.volume.gain.value = soundEnabled ? .7 : 0;
-  syncSoundControls();
-  if (soundEnabled) playSound('select');
+function updateAudioControl(button, setting) {
+  button.textContent = setting.label + (setting.enabled ? ' 켜짐' : ' 꺼짐');
+  button.setAttribute('aria-pressed', String(setting.enabled));
+}
+
+function audioControl(kind) {
+  const button = el('button', 'ghost sound-control');
+  const setting = audioSettings[kind];
+  button.type = 'button';
+  button.dataset.sound = 'none';
+  button.dataset.audio = kind;
+  updateAudioControl(button, setting);
+  button.onclick = () => {
+    setting.enabled = !setting.enabled;
+    try { localStorage.setItem(setting.key, setting.enabled ? 'on' : 'off'); } catch (_) {}
+    document.querySelectorAll('[data-audio="' + kind + '"]').forEach(control => updateAudioControl(control, setting));
+    if (kind === 'music') return syncMusicPlayback();
+    if (audioEngine) audioEngine.volume.gain.value = setting.enabled ? .7 : 0;
+    if (setting.enabled) playSound('select');
+  };
+  return button;
 }
 
 function updateArena() {
@@ -4172,7 +4294,8 @@ function actorTarget(player) {
 function flyCard(from, player, card, color, kept = false) {
   if (motion.matches || !from) return;
   const prefix = player.id === ME ? 'me' : 'rival';
-  const to = centerOf($('#' + prefix + (kept ? '-kept' : '-owned')));
+  const destination = $('#' + prefix + (kept ? '-kept' : '-owned'));
+  const to = centerOf(kept ? destination.lastElementChild : destination.querySelector('.fam-' + card.color));
   if (!to) return;
   const arc = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 - 52 };
   fxPiece('fx-card', color, [
@@ -4181,6 +4304,11 @@ function flyCard(from, player, card, color, kept = false) {
     { transform: fxAt(to, 'scale(.48) rotate(0deg)'), opacity: 0 },
   ], { duration: 575, easing: 'cubic-bezier(.23,.61,.28,1)' }, imageOf(card));
   burst(to, color, 6, 32, 465, '#fff0b4');
+  fxPiece('fx-aura', color, [
+    { transform: fxAt(to, 'scale(.25)'), opacity: 0 },
+    { opacity: .65, offset: .24 },
+    { transform: fxAt(to, 'scale(.88) rotate(24deg)'), opacity: 0 },
+  ], { duration: 440, delay: 430, easing: 'ease-out' });
 }
 
 function scoreNote(before, player) {
@@ -4264,6 +4392,7 @@ function presentMove(player, mv, sources) {
     }
     default:
       feed(name + ' · 패스');
+      playSound('pass');
       return;
   }
   feed(name + ' · ' + event.title);
@@ -4306,8 +4435,8 @@ function celebrate(result) {
   }
 }
 
-$('#lobby-sound').appendChild(soundControl());
-syncSoundControls();
+$('#lobby-sound').append(audioControl('sound'), audioControl('music'));
+document.addEventListener('visibilitychange', syncMusicPlayback);
 document.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (button && !button.disabled && button.dataset.sound !== 'none') playSound('tap');
