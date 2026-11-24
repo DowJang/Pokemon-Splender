@@ -66,7 +66,6 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
 .panel h2 { margin: 0 0 10px; font-size: 13px; color: var(--dim); font-weight: 600; letter-spacing: .3px; }
-.hint { margin: 10px 0 0; font-size: 12px; color: var(--dim); }
 
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .seg button {
@@ -80,7 +79,6 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .rival .nm { width: 66px; font-size: 13px; color: var(--dim); flex: none; }
 .rival .seg { flex: 1; grid-template-columns: repeat(3, 1fr); }
 .rival .seg button { font-size: 13px; padding: 9px 0; }
-.rival .seg button:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
 
 .stats-panel { padding-bottom: 12px; }
 .stats-grid { display: grid; gap: 7px; }
@@ -448,6 +446,7 @@ button:disabled { cursor: default; }
 .panel h2 { color: var(--ink); font-weight: 800; font-size: 14px; }
 .rival .seg { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .rival .seg button { color: #d5e3f7; border-color: #405776; font-size: 12px; }
+.rival .seg button[data-level="spacegod"] { grid-column: span 2; }
 .rival .seg button.on { background: #92eece; border-color: #b5ffe6; color: #102c24; box-shadow: 0 0 14px #78eac53d; }
 .rival .seg button:not(.on):hover { background: #29425c; }
 .rival .nm { display: none; }
@@ -776,7 +775,6 @@ button:disabled { cursor: default; }
 html { background: var(--bg); }
 body { height: auto; min-height: 100%; background-attachment: fixed; }
 #lobby .panel { margin-bottom: 11px; }
-.rival .seg button:last-child:nth-child(3n+1) { grid-column: span 2; }
 #lobby .foot a { color: #afdcff; }
 #myname { font: inherit; }
 .dock-controls .btns .ghost:disabled { opacity: .5; }
@@ -817,9 +815,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 .fx-card img { width: 100%; height: 100%; object-fit: contain; }
 @media (max-width: 540px) {
   #lobby .panel { padding: 11px 12px; }
-  .rival .seg button { padding-block: 8px; }
-  .rival .seg button:nth-child(5) { grid-column: span 2; }
-  .rival .seg button:last-child:nth-child(3n+1) { grid-column: auto; }
+  .rival .seg button { padding-block: 8px; font-size: clamp(10px, 3.2vw, 12px); white-space: nowrap; }
 }
 
 .broadcast {
@@ -964,7 +960,6 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   <div class="panel">
     <h2>1:1 상대 난이도</h2>
     <div id="rivals" class="rivals"></div>
-    <p class="hint">초보자 → 수련자 → 장프로 → 김마귀 → 나일롱머스크 → 화성신 → 우주신 순으로 강해집니다.</p>
   </div>
 
   <div class="panel stats-panel" aria-labelledby="stats-title">
@@ -1430,7 +1425,7 @@ function newPlayer(id, name, kind, level) {
   return {
     id, name,
     kind,            // 'human' | 'ai'
-    level,           // novice / adept / pro / kimmawi / nylongmusk / marsgod / spacegod
+    level,           // 난이도 프로파일 또는 견제형 AI
     tokens: zero(),
     board: [],       // 앞에 놓인 카드 (보너스·승점 유효)
     hand: [],        // 손에 든 예약 카드 (최대 3)
@@ -1744,7 +1739,7 @@ function finish(g) {
 //      / 김마귀(kimmawi) / 나일롱머스크(nylongmusk)
 //      / 화성신(marsgod) / 우주신(spacegod)
 //
-// 일곱 난이도의 차이는 "무엇을 볼 수 있는가"이다.
+// 기본 프로파일별로 평가 기준과 탐색 범위를 다르게 적용한다.
 //   초보자 : 눈앞의 점수와 토큰만 본다. 보너스의 장기 가치·진화 계획을 못 본다. 가끔 아무거나 집는다.
 //   수련자 : 보너스 가치와 진화 가능성까지 보고, 상대 한 턴을 내다본다.
 //   장프로 : 후보 수마다 자기 턴을 여러 번 굴려 "18점까지 몇 턴"을 직접 재고 최단 경로를 고른다.
@@ -1778,7 +1773,7 @@ const PROFILE = {
     lookahead: 0, rollout: 8, pace: 7.5, blunder: 0, noise: 0,
     searchDepth: 2, rootBeam: 16, searchBeam: 11, opponentWeight: 0.20, searchPace: 1.5,
   },
-  // 나일롱머스크 = 김마귀의 응수 탐색에 장기 맞대결 롤아웃을 더한 최고 난이도.
+  // 나일롱머스크 = 김마귀의 응수 탐색에 장기 맞대결 롤아웃을 더한다.
   nylongmusk: {
     vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
     rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
@@ -1794,7 +1789,7 @@ const PROFILE = {
     searchDepth: 2, rootBeam: 26, searchBeam: 14, opponentWeight: 0.22, searchPace: 1.55,
     versusRollout: 24, versusWeight: 0.92,
   },
-  // 우주신 = 가장 넓은 후보를 40수 맞대결로 검증하는 진짜 최고 난이도.
+  // 우주신 = 기본 프로파일 중 가장 넓은 후보를 40수 맞대결로 검증한다.
   spacegod: {
     vp: 12, bonus: 3.6, earliness: 2.6, market: 1.7, evo: 1.6, buried: 2.0,
     rival: 3.0, token: 0.45, master: 1.1, hand: 0.6,
@@ -2152,13 +2147,13 @@ function chooseEvolution(g, w = prof(cur(g))) {
 }
 
 const LEVEL_NAMES = {
-  novice: '초보자',
-  adept: '수련자',
   pro: '장프로',
   kimmawi: '김마귀',
   nylongmusk: '나일롱머스크',
   marsgod: '화성신',
   spacegod: '우주신',
+  swindler: '사기꾼남편',
+  master: '꺼드럭지은',
 };
 
 const COACH_PROFILE = { ...PROFILE.kimmawi, opponentWeight: 1 };
@@ -2206,7 +2201,9 @@ function pressureRandom(g) {
 function pressureWeights(g) {
   const style = PRESSURE_STYLES[g.pressure.style];
   const rand = pressureRandom(g);
-  return Object.fromEntries(Object.entries(style).map(([key, weight]) => [key, weight * (0.9 + rand() * 0.2)]));
+  const weights = Object.fromEntries(Object.entries(style).map(([key, weight]) => [key, weight * (0.9 + rand() * 0.2)]));
+  if (g.players[1].level !== 'master') return weights;
+  return { ...weights, pace: weights.pace * 1.14, cutoff: weights.cutoff * 1.2 };
 }
 
 function pressureTargets(g, p, w) {
@@ -2300,16 +2297,32 @@ function pressureDenial(before, after) {
   return best;
 }
 
-function pressureChoices(g, w, moves = legalMoves(g)) {
+function turnWithEvolution(g, evo) {
+  const next = clone(g);
+  if (evo) applyEvolution(next, evo);
+  return endTurn(next);
+}
+
+function pressureChoices(g, w, moves = legalMoves(g), allEvolutions = false) {
   const attack = g.turn === 1;
   const before = attack ? pressureTargets(g, g.players[0], w) : [];
-  const choices = moves.map(mv => {
-    const next = pressureTurn(g, mv, w);
-    const targets = next.over ? [] : pressureTargets(next, next.players[0], w);
-    const denial = attack && !next.over ? pressureDenial(before, targets) : null;
-    const value = pressureValue(next, w, targets);
-    return { mv, next, value, priority: value + (denial?.value || 0) * w.cutoff * 0.27 };
-  });
+  const choices = [];
+  for (const mv of moves) {
+    let outcomes;
+    if (allEvolutions) {
+      const moved = applyMove(clone(g), mv);
+      outcomes = evolutions(moved).map(evo => turnWithEvolution(moved, evo));
+      outcomes.push(endTurn(moved));
+    } else {
+      outcomes = [pressureTurn(g, mv, w)];
+    }
+    for (const next of outcomes) {
+      const targets = next.over ? [] : pressureTargets(next, next.players[0], w);
+      const denial = attack && !next.over ? pressureDenial(before, targets) : null;
+      const value = pressureValue(next, w, targets);
+      choices.push({ mv, next, value, priority: value + (denial?.value || 0) * w.cutoff * 0.27 });
+    }
+  }
   return choices.sort((a, b) => attack ? b.priority - a.priority : a.priority - b.priority);
 }
 
@@ -2357,6 +2370,129 @@ function swindlerMove(g) {
   return best;
 }
 
+const MASTER_PLIES = 60;
+const MASTER_REPLY_STYLES = [1, 1.24, 0.78, 1.10];
+const EMPTY_SEARCH_DECKS = { 1: [], 2: [], 3: [], R: [], L: [] };
+
+function masterWorlds(g) {
+  const rand = pressureRandom(g);
+  return MASTER_REPLY_STYLES.map(() => studyWorld(g, Math.floor(rand() * 1000000)));
+}
+
+function masterAverage(values) {
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return mean * 0.86 + Math.min(...values) * 0.14;
+}
+
+function masterReplyLine(option, w) {
+  if (option.next.over) return option;
+  const replies = pressureChoices(option.next, w, undefined, true);
+  // 첫 응수는 진화 여부를 포함한 모든 합법 수를 비교한다.
+  const worst = replies[0].value;
+  const value = replies[0].next.over ? worst : worst * 0.66 + option.priority * 0.34;
+  return { ...option, replies, value };
+}
+
+function masterTactics(g, w, depth, alpha, beta) {
+  if (g.over) return { next: g, value: pressureValue(g, w) };
+  const choices = pressureChoices(g, w, undefined, true);
+  if (depth === 1) return choices[0];
+  const attack = g.turn === 1;
+  let best = null;
+  for (const choice of choices.slice(0, 4)) {
+    const line = masterTactics(choice.next, w, depth - 1, alpha, beta);
+    if (!best || (attack ? line.value > best.value : line.value < best.value)) best = line;
+    if (attack) alpha = Math.max(alpha, best.value);
+    else beta = Math.min(beta, best.value);
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+function masterPlayout(g, w, plies) {
+  let state = g;
+  let tempo = 0;
+  let ply = 0;
+  // 양쪽 모두 매 턴 공개된 선택지를 다시 평가하고, 선택한 뒤에 덱을 공개한다.
+  for (; ply < plies && !state.over; ply++) {
+    const actor = cur(state);
+    const visible = { ...state, decks: EMPTY_SEARCH_DECKS };
+    const { mv } = pressureChoices(visible, w)[0];
+    const move = mv.type === 'pass' ? legalMoves(state)[0] : mv;
+    const next = pressureTurn(state, move, w);
+    const gained = score(next.players[actor.id]) - score(actor);
+    tempo += (actor.id === 1 ? gained : -gained) * (1 - ply / plies);
+    state = next;
+  }
+  if (!state.over) return Math.max(-150, Math.min(150, pressureValue(state, w))) + tempo * 2;
+  const margin = score(state.players[1]) - score(state.players[0]);
+  return (state.winner === 1 ? 1 : -1) * (130 + (plies - ply) * 0.9) + margin * 2 + tempo * 2;
+}
+
+function masterForecast(line, w, style) {
+  if (line.next.over) return Math.sign(line.value) * 480;
+  let worst = null;
+  for (const reply of line.replies.slice(0, 4)) {
+    const answer = masterTactics(reply.next, w, 2, -Infinity, worst?.value ?? Infinity);
+    if (!worst || answer.value < worst.value) worst = answer;
+  }
+  const tactics = Math.max(-220, Math.min(220, worst.value));
+  const estimate = Math.max(-240, Math.min(240, line.value));
+  const future = masterPlayout(worst.next, { ...w, rival: w.rival * style }, MASTER_PLIES - 4);
+  return estimate * 0.20 + tactics * 0.43 + future * 0.37;
+}
+
+function masterMove(g) {
+  const moves = legalMoves(g);
+  if (moves.length === 1) return moves[0];
+  const w = pressureWeights(g);
+  const worlds = masterWorlds(g).map(world => {
+    const bestByMove = new Map();
+    for (const choice of pressureChoices(world, w, moves, true)) {
+      const key = moveKey(choice.mv);
+      const line = masterReplyLine(choice, w);
+      if (line.value > (bestByMove.get(key)?.value ?? -Infinity)) bestByMove.set(key, line);
+    }
+    return bestByMove;
+  });
+  const ordered = moves.map(mv => {
+    const lines = worlds.map(world => world.get(moveKey(mv)));
+    return { mv, lines, quick: masterAverage(lines.map(line => line.value)), forecasts: [] };
+  }).sort((a, b) => b.quick - a.quick);
+  const finishNow = ordered.find(root => root.lines.every(line => line.next.over && line.next.winner === 1));
+  if (finishNow || g.finalRound) return (finishNow || ordered[0]).mv;
+
+  // 첫 수는 전부 검사하고, 유력한 수는 덱과 상대 성향을 바꿔 최대 60수씩 검증한다.
+  let finalists = ordered.slice(0, 8);
+  const shortlistSizes = [6, 4, 3, 1];
+  for (let sample = 0; sample < worlds.length; sample++) {
+    for (const root of finalists) {
+      root.forecasts.push(masterForecast(root.lines[sample], w, MASTER_REPLY_STYLES[sample]));
+      root.rating = masterAverage(root.forecasts) + Math.max(-220, Math.min(220, root.quick)) * 0.10;
+    }
+    finalists.sort((a, b) => b.rating - a.rating || b.quick - a.quick);
+    finalists = finalists.slice(0, shortlistSizes[sample]);
+  }
+  return finalists[0].mv;
+}
+
+function masterEvolution(g) {
+  const options = evolutions(g);
+  if (!options.length) return null;
+  const worlds = masterWorlds(g);
+  const w = pressureWeights(g);
+  let best = null, value = -Infinity;
+  for (const evo of [null, ...options]) {
+    const rating = masterAverage(worlds.map(world => masterTactics(turnWithEvolution(world, evo), w, 2, -Infinity, Infinity).value));
+    if (rating > value) { best = evo; value = rating; }
+  }
+  return best;
+}
+
+function pressureMove(g) {
+  return g.players[1].level === 'master' ? masterMove(g) : swindlerMove(g);
+}
+
 function cardGap(p, c, bon = bonuses(p)) {
   const missing = COLORS.reduce((sum, k) => sum + Math.max(0, (c.cost[k] || 0) - bon[k] - p.tokens[k]), 0);
   return Math.max(0, missing + (c.cost.m || 0) - p.tokens.m);
@@ -2398,7 +2534,7 @@ function movePreview(g, mv) {
 function predictRivalIntent(g) {
   const board = clone(g);
   board.turn = 1;
-  const mv = board.pressure ? swindlerMove(board) : chooseMove(studyWorld(board, STUDY_SAMPLES + MATCH_SAMPLES), true);
+  const mv = board.pressure ? pressureMove(board) : chooseMove(studyWorld(board, STUDY_SAMPLES + MATCH_SAMPLES), true);
   const { card, balls, title } = movePreview(board, mv);
   const taking = mv.type === 'take2' || mv.type === 'take3';
   const target = taking ? collectionTarget(board, mv) : card;
@@ -2417,7 +2553,9 @@ function predictRivalIntent(g) {
 }
 
 function runOpponentTask(g, type) {
-  return type === 'rivalIntent' ? predictRivalIntent(g) : swindlerMove(g);
+  if (type === 'rivalIntent') return predictRivalIntent(g);
+  if (type === 'evolution') return masterEvolution(g);
+  return pressureMove(g);
 }
 
 function moveReason(g, mv) {
@@ -2686,7 +2824,7 @@ function refreshBroadcast() {
 }
 
 // ── 로비 ──────────────────────────────────────────────────────
-let rivalLevel = 'adept';
+let rivalLevel = 'pro';
 const STATS_KEY = 'poke-splendor-stats-v1';
 let statsCache = null;
 
@@ -2781,14 +2919,14 @@ renderStats();
 
 function startGame(mode = null, seed) {
   const name = $('#myname').value.trim().slice(0, 8) || '나';
-  const swindler = mode === 'swindler';
+  const level = mode === 'swindler' ? 'swindler' : rivalLevel;
   const players = [
     newPlayer(0, name, 'human', null),
-    newPlayer(1, swindler ? '사기꾼남편' : LEVEL_NAMES[rivalLevel], 'ai', swindler ? 'swindler' : rivalLevel),
+    newPlayer(1, LEVEL_NAMES[level], 'ai', level),
   ];
   ME = 0;
   G = newGame({ players, seed });
-  if (swindler) {
+  if (level === 'swindler' || level === 'master') {
     const styles = PRESSURE_STYLES.map((_, i) => i).filter(i => i !== lastPressureStyle);
     lastPressureStyle = styles[Math.floor(Math.random() * styles.length)];
     G.pressure = { style: lastPressureStyle, seed: Math.floor(Math.random() * 4294967296) };
@@ -3533,11 +3671,13 @@ async function step() {
     return;
   }
   busy = true;
-  await sleep(motion.matches ? 380 : 670);
   const p = cur(G);
   const w = G.pressure ? pressureWeights(G) : null;
-  const targets = w ? pressureTargets(G, G.players[ME], w) : null;
-  const mv = w ? await requestOpponentTask(G, 'swindlerMove') : chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
+  const targets = w && training ? pressureTargets(G, G.players[ME], w) : null;
+  if (p.level === 'master') feed(p.name + ' · 수 계산 중');
+  const moveTask = w ? requestOpponentTask(G, 'move').catch(() => swindlerMove(G)) : null;
+  const [plannedMove] = await Promise.all([moveTask, sleep(motion.matches ? 380 : 670)]);
+  const mv = plannedMove || chooseMove(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES) : G);
   const sources = actionSources(mv);
   const action = training ? moveTitle(G, mv) : '';
   const intent = training ? moveReason(G, mv) : '';
@@ -3550,9 +3690,12 @@ async function step() {
   }
   render();
   presentMove(p, mv, sources);
-  await sleep(motion.matches ? 510 : 770);
+  const evolutionTask = p.level === 'master' && evolutions(G).length ?
+    requestOpponentTask(G, 'evolution').catch(() => pressureEvolution(G, w)) : null;
+  const [plannedEvolution] = await Promise.all([evolutionTask, sleep(motion.matches ? 510 : 770)]);
 
-  const evo = w ? pressureEvolution(G, w) : chooseEvolution(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES + 1) : G);
+  const evo = evolutionTask ? plannedEvolution : w ? pressureEvolution(G, w) :
+    chooseEvolution(training ? studyWorld(G, STUDY_SAMPLES + MATCH_SAMPLES + 1) : G);
   if (evo) {
     const from = p.board.find(card => card.id === evo.from);
     const card = findCard(G, evo.to).card;
@@ -3563,7 +3706,7 @@ async function step() {
     presentEvolution(p, from, card, points);
     await sleep(motion.matches ? 500 : 740);
   }
-  if (w) {
+  if (w && training) {
     const denial = pressureDenial(targets, pressureTargets(G, G.players[ME], w));
     if (denial?.value > 2) {
       training.history.at(-1).opponent += denial.taken ?
