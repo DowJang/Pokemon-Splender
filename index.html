@@ -108,29 +108,39 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* ── 게임 레이아웃 ─────────────────────────────────── */
 #game {
+  --gutter: clamp(5px, 1vw, 16px);
+  --side-width: clamp(86px, 16vw, 242px);
+  --frame-max: 1680px;
+  --frame-height: 880px;
   position: fixed; inset: 0; z-index: 0;
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-columns: minmax(0, var(--field-width)); justify-content: center;
+  display: grid; grid-template-columns: var(--side-width) minmax(0, 1fr) var(--side-width);
+  grid-template-rows: minmax(0, 1fr); gap: var(--gutter);
   height: 100dvh; min-height: 0; overflow: hidden; background: var(--bg); isolation: isolate;
-  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+  padding-top: max(var(--gutter), var(--safe-t), calc((100dvh - var(--frame-height)) / 2));
+  padding-bottom: max(var(--gutter), var(--safe-b), calc((100dvh - var(--frame-height)) / 2));
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px), calc((100vw - var(--frame-max)) / 2));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px), calc((100vw - var(--frame-max)) / 2));
 }
 .playfield {
-  position: relative;
-  display: flex; flex-direction: column; min-height: 0; width: 100%;
-  overflow: hidden;
+  position: relative; min-width: 0; min-height: 0;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--gutter);
 }
-.arena-info { min-width: 0; flex: none; }
-.board { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 6px; -webkit-overflow-scrolling: touch; }
-.rowwrap { margin-bottom: 2px; }
-.rowlabel { font-size: 9px; color: var(--dim); margin: 0 2px 1px; letter-spacing: .3px; font-weight: 600; line-height: 1.15; }
-.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; align-content: start; }
-.cards .card { width: 100%; min-width: 0; max-width: 120px; justify-self: center; }
+.arena-info { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 5px; }
+.arena-hud { grid-column: 1 / -1; }
+.arena-info:not(:has(#coach-bar:not(.hidden))) #broadcast,
+.arena-info:not(:has(#broadcast:not(.hidden))) #coach-bar { grid-column: 1 / -1; }
+.cards {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr)); gap: clamp(3px, .52vw, 9px); min-height: 0;
+}
+#row-special { grid-template-columns: minmax(0, 1fr); }
+.cards .card { width: 100%; min-width: 0; min-height: 0; }
 
 /* ── 카드 ──────────────────────────────────────────── */
 .card {
   position: relative; border-radius: 10px; overflow: hidden;
   background: #eef0f4; border: 1px solid #0002;
-  aspect-ratio: 5 / 7; display: flex; flex-direction: column;
+  display: flex; flex-direction: column;
   box-shadow: 0 1px 3px #0006;
   transition: transform .12s, box-shadow .12s;
 }
@@ -170,46 +180,39 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .ball-count, .pball::before {
   display: grid; place-items: center; width: 67%; aspect-ratio: 1;
   border: 1px solid #eef4ff; border-radius: 50%; background: #141b28;
-  font-size: max(9px, calc(var(--ball-size) * .45)); line-height: 1; font-weight: 850;
+  font-size: max(8px, calc(var(--ball-size) * .45)); line-height: 1; font-weight: 850;
 }
 .pball { --ball-size: 15px; }
 .pball::before { content: ''; width: 38%; background: #f9fbff; border-color: #141b28; }
-.pip.sm { --ball-size: 17px; }
 
-/* ── 상·하단 고정 카드 현황 ─────────────────────────── */
+/* ── 대전 좌우 패널 ─────────────────────────────────── */
 .player-dock {
-  position: relative; z-index: 2; min-width: 0;
-  background: var(--panel);
+  position: relative; z-index: 2; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; gap: clamp(5px, 1.3vh, 15px);
+  padding: clamp(5px, .95vw, 16px); border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(150deg, #1a2943, #0e192f);
 }
-.player-dock.active { box-shadow: inset 0 0 0 1px var(--acc), 0 5px 18px #0008; }
-.rivalbar {
-  padding: calc(4px + var(--safe-t)) 7px 5px;
-  border-bottom: 1px solid var(--line); box-shadow: 0 5px 18px #0008;
-}
-.me {
-  padding: 4px 8px calc(6px + var(--safe-b));
-  border-top: 1px solid var(--line); box-shadow: 0 -5px 18px #0008;
-}
+.rivalbar { --team: var(--rival); }
+.me { --team: var(--arena); }
+.dock-head { min-width: 0; }
+.dock-caption { display: flex; justify-content: space-between; gap: 4px; color: var(--team); font-size: clamp(10px, 1.1vw, 14px); font-weight: 850; }
+.dock-caption small { color: var(--dim); white-space: nowrap; }
 .dock-summary {
-  display: flex; align-items: center; gap: 6px; min-height: 21px;
-  font-size: 11px; white-space: nowrap; flex-wrap: wrap;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 3px;
+  padding: 3px 0 5px; min-width: 0; white-space: nowrap;
 }
 .dock-name {
-  max-width: 80px; overflow: hidden; text-overflow: ellipsis;
-  font-size: 12px; font-weight: 800;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  font-size: clamp(10px, 1.15vw, 16px); font-weight: 850;
 }
-.dock-score { color: var(--acc); font-size: 14px; }
-.dock-meta { color: var(--dim); }
-.dock-stat { display: inline-flex; align-items: center; gap: 2px; color: var(--dim); }
-.dock-stat em { margin-right: 1px; color: #77849e; font-size: 9px; font-style: normal; }
-.dock-stat i { color: #65718a; font-size: 9px; font-style: normal; }
-.collection-row { display: flex; align-items: stretch; gap: 10px; min-width: 0; margin-top: 2px; }
+.dock-resources { display: grid; gap: 5px; }
+.dock-resource { display: grid; grid-template-rows: auto minmax(15px, auto); gap: 3px; }
+.resource-name { display: flex; justify-content: space-between; gap: 3px; color: var(--dim); font-size: 11px; font-weight: 700; }
+.resource-values { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; min-width: 0; color: var(--dim); font-size: 10px; }
+.dock-resources .pip { --ball-size: clamp(12px, 1.65vw, 23px); }
+.collection-row { display: flex; flex-direction: column; flex: 1; gap: 7px; min-width: 0; min-height: 0; }
 .collection-group { min-width: 0; }
-.owned-group { flex: 1 1 auto; }
-.kept-group {
-  flex: 0 1 38%; min-width: 82px; max-width: 190px;
-  margin-left: 2px; padding-left: 10px; border-left: 1px solid #596781;
-}
+.owned-group { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .collection-title {
   display: flex; align-items: center; gap: 4px; min-height: 20px;
   color: var(--dim); font-size: 11px; font-weight: 750;
@@ -220,18 +223,17 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   background: var(--m); border: 1px solid #c6a7f2; box-shadow: 0 0 6px #9f6be8aa;
 }
 .collection-strip {
-  display: flex; align-items: center; gap: 5px; min-height: calc(var(--mini-card-h) + 9px); max-width: 100%;
-  padding: 3px 3px 4px; overflow-x: auto; overflow-y: hidden;
-  overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #53617b transparent;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 4px;
+  padding: 3px 2px; min-height: 0; min-width: 0;
+  overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #6983a5 transparent;
 }
-.collection-strip::-webkit-scrollbar { height: 3px; }
-.collection-strip::-webkit-scrollbar-thumb { background: #53617b; border-radius: 3px; }
+.owned-group .collection-strip { overflow-y: auto; }
 .empty-collection {
-  display: grid; place-items: center; min-width: 48px; height: calc(var(--mini-card-h) - 6px);
+  grid-column: 1 / -1; display: grid; place-items: center; min-height: 23px;
   color: #aebed6; border: 1px dashed #5c6e8b; border-radius: 7px; font-size: 11px;
 }
 .collection-card {
-  position: relative; flex: 0 0 53px; width: 53px; height: var(--mini-card-h); padding: 0;
+  position: relative; width: 100%; min-width: 0; height: var(--mini-card-h); padding: 0;
   display: grid; grid-template-rows: 24px minmax(0, 1fr) 14px;
   overflow: hidden; border: 1px solid #0005; border-radius: 7px;
   background: #eef0f4;
@@ -239,21 +241,14 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 }
 button.collection-card { cursor: pointer; }
 button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
-.collection-card img {
+.collection-art {
   align-self: center; justify-self: center; width: 75%; height: 85%; min-height: 0; object-fit: contain;
 }
-.collection-card.has-evo { flex-basis: 65px; width: 65px; }
 .collection-name {
   padding-inline: 2px; overflow: hidden; color: #202835; font-size: 10px; font-weight: 850;
   line-height: 14px; text-align: center; text-overflow: ellipsis; white-space: nowrap;
 }
 .kept-card { box-shadow: 0 0 0 2px #a875e8, 0 2px 5px #0009; }
-.me .collection-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, min(61%, 220px)); }
-.me .collection-row:has(#me-kept .empty-collection) { grid-template-columns: minmax(0, 1fr) minmax(72px, 23%); }
-.me .kept-group { min-width: 0; max-width: none; margin-left: 0; padding-left: 6px; }
-#me-kept { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
-#me-kept .collection-card { width: 100%; }
-#me-kept .empty-collection { grid-column: 1 / -1; }
 .collection-link {
   display: inline-flex; align-items: center; gap: 4px; padding: 0 5px 0 0;
   font-weight: inherit; color: var(--ink);
@@ -266,16 +261,12 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 .tok { --ball-size: 35px; }
 .tok .badge { position: absolute; top: -4px; right: -2px; background: var(--acc); color: #241c00; border-radius: 9px; font-size: 10px; padding: 0 5px; font-weight: 800; }
 
-/* ── 내 영역 — 상태·확정/취소를 한 줄에 압축 ─────────── */
-.me-head {
-  position: relative; display: flex; align-items: center; gap: 5px;
-  min-height: 25px; padding-right: 145px; font-size: 12px; font-weight: 700;
-}
-#me-name { flex: none; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.me-head .score { color: var(--acc); font-size: 15px; flex: none; }
+/* ── 내 조작 ──────────────────────────────────────── */
+.dock-controls { display: grid; gap: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
+.dock-selection { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 17px; }
 #status {
-  flex: 1 1 auto; min-width: 0; font-size: 10px; font-weight: 400; color: var(--dim);
-  text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; font-size: 11px; font-weight: 750; color: #dbe7fa;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .picks { display: flex; gap: 3px; flex: none; }
 .picks:empty { display: none; }
@@ -284,18 +275,11 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   content: '×'; position: absolute; top: -6px; right: -5px; width: 13px; height: 13px;
   background: #000c; color: #fff; border-radius: 50%; font-size: 10px; line-height: 13px; text-align: center;
 }
-.me-head .btns {
-  position: absolute; top: 0; right: 0; z-index: 2;
-  display: flex; gap: 3px; padding-left: 4px; background: var(--panel);
+.dock-controls .btns { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: 4px; }
+.dock-controls .btns button {
+  min-width: 0; min-height: 32px; padding: 3px 5px; font-size: 12px; border-radius: 7px; line-height: 1.25; white-space: nowrap;
 }
-.me-head .btns button {
-  min-width: 43px; padding: 3px 7px; font-size: 11px; border-radius: 7px; line-height: 1.6;
-}
-#menu { padding: 3px 7px !important; }
-
-.me-mid { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; align-items: center; min-height: 15px; }
-.me-tokens, .me-bonus { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
-.me-bonus .lb, .me-tokens .lb { font-size: 11px; color: var(--dim); font-weight: 650; }
+#menu { min-width: 28px; }
 
 /* ── 모달 / 토스트 ─────────────────────────────────── */
 .modal { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; padding: 16px; z-index: 50; }
@@ -362,8 +346,6 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
 
 .action-popup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #111a2df2; border: 1px solid var(--acc); box-shadow: 0 10px 35px #0009; padding: 14px 22px; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; z-index: 70; pointer-events: none; white-space: nowrap; }
 
-@media (min-width: 620px) { .cards { gap: 7px; } }
-
 @media (max-width: 420px) {
   .card-detail { padding: 15px; }
   .detail-heading { margin: -15px -15px 12px; padding: 15px 52px 12px 15px; }
@@ -373,12 +355,6 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   .detail-chip { padding: 6px 7px; }
 }
 
-@media (max-height: 560px) {
-  :root { --mini-card-h: 44px; }
-  .dock-meta, .dock-stat em { display: none; }
-  .collection-title { min-height: 16px; }
-  .collection-card { grid-template-rows: 19px minmax(0, 1fr) 13px; }
-}
 
 #training-start { color: #a8dbff; border-color: #5588ad; }
 #coach-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1d3144; border-left: 3px solid #87ceff; }
@@ -412,8 +388,6 @@ button.collection-card:focus-visible { outline: 2px solid var(--acc); outline-of
   --ok: #78eac5;
   --arena: #79e5dc;
   --rival: #c7a9ff;
-  --field-width: 760px;
-  --card-ratio: 1.13;
 }
 
 body {
@@ -502,24 +476,15 @@ button:disabled { cursor: default; }
     repeating-linear-gradient(0deg, #a0b3ff12 0 1px, transparent 1px 76px);
   mask-image: radial-gradient(ellipse at center, black 15%, transparent 83%);
 }
-.playfield { max-width: var(--field-width); }
-.player-dock { background: linear-gradient(120deg, #1a2943, #0e192f); }
-.rivalbar { --team: var(--rival); border-radius: 0 0 17px 17px; }
-.me { --team: var(--arena); border-radius: 17px 17px 0 0; }
 .player-dock.active {
+  border-color: color-mix(in srgb, var(--team) 72%, #435575);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--team) 65%, transparent), 0 0 24px color-mix(in srgb, var(--team) 16%, transparent);
 }
-.rivalbar, .me { padding-inline: clamp(9px, 3vw, 17px); }
-.dock-summary { gap: 6px; min-height: 27px; }
-.dock-name, #me-name { max-width: 85px; font-size: 13px; }
-#me-name { flex: 0 1 auto; min-width: 0; max-width: clamp(56px, 18vw, 112px); }
-.dock-meta, .dock-stat { color: #bac9e0; }
-.dock-stat em, .dock-stat i { color: #a4b4cd; }
-.dock-score, .me-head .score {
-  color: var(--team); font-weight: 900; font-size: 17px; flex: none;
+.dock-score {
+  color: var(--team); font-weight: 900; font-size: clamp(15px, 2.1vw, 29px); flex: none;
   font-variant-numeric: tabular-nums;
 }
-.dock-score small, .me-head .score small { margin-left: 2px; color: var(--dim); font-size: 9px; }
+.dock-score small { margin-left: 2px; color: var(--dim); font-size: 10px; }
 .score-track { position: relative; height: 3px; overflow: hidden; border-radius: 9px; background: #5e71934d; }
 .score-track > b {
   position: absolute; inset: 0 auto 0 0; width: var(--progress, 0%); border-radius: inherit;
@@ -528,19 +493,13 @@ button:disabled { cursor: default; }
 .collection-title { color: #bac8df; }
 .collection-title b { color: var(--team); }
 .empty-collection { color: #a0b1cd; border-color: #4e607c; }
-.kept-group { border-color: #494966; }
-.collection-card img { filter: drop-shadow(0 1px 1px #10233e60); }
+.collection-art { filter: drop-shadow(0 1px 1px #10233e60); }
 .collection-card { background: linear-gradient(180deg, #e4eff8 76%, #fff); }
-.me-head { padding-right: 0; min-height: 32px; }
-.me-head .btns { position: static; background: none; padding: 0; flex: none; }
-.me-head .btns button { min-height: 30px; font-size: 12px; }
-#menu { min-width: 29px; }
-#status { font-weight: 750; color: #dbe7fa; }
-.me-mid { margin: 4px 0 1px; }
 
 .arena-hud {
-  display: flex; align-items: center; gap: 7px; flex: none; min-height: 32px;
-  padding: 4px clamp(9px, 3vw, 17px); font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; gap: 7px; min-height: 34px;
+  padding: 4px 9px; background: #101c30; border: 1px solid #40546b; border-radius: 9px;
+  font-size: 12px; font-weight: 800;
 }
 #round-tag { color: #c2d0e8; flex: none; }
 #turn-tag {
@@ -558,7 +517,7 @@ button:disabled { cursor: default; }
   text-overflow: ellipsis; white-space: nowrap; text-align: right;
 }
 #coach-bar {
-  min-width: 0; flex: none; margin: 0 8px 3px; padding: 5px 8px 5px 10px; border-radius: 8px;
+  min-width: 0; padding: 5px 8px; border-radius: 8px;
   background: linear-gradient(90deg, #193e46, #182c40); border-color: #7be6cb;
 }
 #coach-caption, #coach-tip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -570,69 +529,78 @@ button:disabled { cursor: default; }
 .lesson details, .result-screen details { padding: 8px 10px; border-radius: 8px; background: #0d1a2e; }
 .result-screen summary { color: var(--arena); cursor: pointer; }
 
-.board { padding: 2px 8px 5px; display: grid; grid-template-rows: repeat(4, minmax(min-content, 1fr)); gap: 5px; scrollbar-width: thin; scrollbar-color: #6381a6 transparent; }
+.board {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 2fr)) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr); gap: clamp(4px, .75vw, 12px);
+  align-self: center; height: 100%; max-height: 620px; min-height: 0; min-width: 0;
+}
 .rowwrap {
   --rail: #76e0d1;
-  position: relative; display: grid; grid-template-columns: 86px minmax(0, 1fr); align-items: center;
-  gap: 7px; margin: 0; padding: 4px 9px; border: 1px solid #3f527284; border-radius: 11px;
-  background: linear-gradient(110deg, color-mix(in srgb, var(--rail) 10%, #111e33), #101d33c9 52%);
-  box-shadow: inset 3px 0 color-mix(in srgb, var(--rail) 55%, transparent);
+  display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0;
+  gap: 6px; padding: clamp(4px, .65vw, 10px); border: 1px solid #3f5272; border-radius: 11px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rail) 13%, #111e33), #101d33c9 55%);
+  box-shadow: inset 0 2px color-mix(in srgb, var(--rail) 65%, transparent);
 }
 .rowwrap.rare-row { --rail: #ffdb87; }
 .rowwrap.tier-3 { --rail: #c5a9ff; }
 .rowwrap.tier-2 { --rail: #91c8ff; }
-.rowlabel { display: grid; justify-items: start; gap: 4px; margin: 0; }
-.rowlabel strong { color: var(--rail); font-size: 12px; font-weight: 850; }
+.rowlabel { display: flex; align-items: center; justify-content: space-between; gap: 2px; min-height: 25px; }
+.rowlabel strong { color: var(--rail); font-size: clamp(10px, 1.2vw, 15px); font-weight: 850; white-space: nowrap; }
 .deck-button {
   padding: 3px 5px; border: 1px solid #4a6383; border-radius: 6px; color: #ecf3ff;
   background: #1d304a; font-size: 10px; line-height: 1.25; white-space: nowrap;
 }
 .deck-button:hover:enabled { border-color: var(--rail); background: #2e4663; }
 .deck-button:disabled { color: #b2c1da; background: #111d31; border-color: #374966; }
-.cards { gap: 6px; }
-.cards .card { max-width: 132px; }
 .card {
   --base: #e8f0fb;
-  --cost-size: 30px;
+  --cost-size: clamp(13px, min(1.85vw, 4.5vh), 30px);
   border: 1px solid color-mix(in srgb, var(--ball-color, #88a1bf) 80%, #b8d2e8);
-  border-radius: 8px; aspect-ratio: var(--card-ratio); background: #e9f0fa;
+  border-radius: 8px; background: #e9f0fa;
   padding: 0; line-height: 1; box-shadow: 0 2px 5px #0009; text-align: left;
 }
-.card:not(.empty) { min-height: calc(2 * var(--cost-size) + 52px); }
 .card.fam-r { --base: #ffe7e4; }
 .card.fam-b { --base: #dbeaff; }
 .card.fam-y { --base: #fff2c7; }
 .card.fam-p { --base: #ffe5f1; }
 .card.fam-k { --base: #e9eafa; }
 .card.buy { outline: 2px solid var(--ok); outline-offset: 0; box-shadow: 0 0 13px #67ffb65c; }
-.card:not(.empty):enabled:hover, .card:not(.empty):focus-visible {
+.card:not(.empty):focus-visible {
   transform: translateY(-2px); z-index: 2; outline: 2px solid var(--acc); box-shadow: 0 5px 15px #0009;
+}
+@media (hover: hover) {
+  .card:not(.empty):enabled:hover { transform: translateY(-2px); z-index: 2; outline: 2px solid var(--acc); }
 }
 .card.empty { opacity: .55; }
 .ribbon {
-  flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
   padding-inline: 4px; min-width: 0;
   background-color: var(--ball-color); background-image: var(--ball-mark, none);
 }
-.card .ribbon { height: 24%; min-height: 25px; }
+.card .ribbon { height: clamp(20px, 6.4vh, 43px); }
 .ribbon .vp, .ribbon .bonus-count {
   font-weight: 900; color: var(--ribbon-ink, #fff); line-height: 1;
 }
 .ribbon .vp { grid-column: 1; grid-row: 1; }
 .ribbon .bonus-count { grid-column: 3; grid-row: 1; justify-self: end; font-size: 11px; }
-.card .ribbon .vp { font-size: clamp(12px, 2.8vw, 16px); }
+.card .ribbon .vp { font-size: clamp(11px, 1.7vw, 20px); }
 .evo-label {
   grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; justify-content: center;
-  gap: 3px; padding: 2px 4px; border-radius: 5px; background: #131e33; color: #fff;
-  font-size: clamp(10px, 2.8vw, 14px); line-height: 1; font-weight: 900; white-space: nowrap;
+  gap: 2px; padding: 1px 3px; border-radius: 5px; background: #131e33; color: #fff;
 }
-.evo-label .ball-token { --ball-size: 18px; }
+.evo-preview {
+  width: clamp(13px, min(2.6vw, 4.4vh), 29px); height: auto; aspect-ratio: 1; object-fit: contain;
+  padding: 1px; border-radius: 4px; background: #dbeaf7;
+}
+.evo-label .ball-token { --ball-size: clamp(12px, min(1.8vw, 4vh), 21px); }
 .collection-card .ribbon { padding-inline: 3px; font-size: 10px; }
-.collection-card .evo-label { gap: 2px; padding-inline: 3px; font-size: 10px; }
+.collection-card .evo-label { gap: 1px; padding-inline: 2px; }
+.collection-card .evo-preview { width: 16px; }
 .collection-card .evo-label .ball-token { --ball-size: 15px; }
 .market-body {
-  flex: 1; min-height: calc(2 * var(--cost-size) + 4px);
+  flex: 1; min-height: 0;
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch;
+  container-type: size;
   background: #f3f7fe;
 }
 .card .art {
@@ -648,21 +616,28 @@ button:disabled { cursor: default; }
 }
 .card .art img { width: 78%; height: 80%; min-height: 0; object-fit: contain; filter: drop-shadow(0 3px 2px #0f1f3d4d); }
 .card .cost {
-  display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, var(--cost-size));
+  --cost-rows: 2;
+  --coin-size: var(--cost-size);
+  display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--cost-rows), var(--coin-size));
   place-content: center; gap: 2px; padding-inline: 3px 2px;
 }
-.card .cost:has(> :only-child) { grid-template-rows: var(--cost-size); }
-.card .coin { --ball-size: var(--cost-size); }
+.card .cost:has(> :only-child) { --cost-rows: 1; }
+.card .cost:has(> :nth-child(3):last-child) { --cost-rows: 3; }
+.card .cost:has(> :nth-child(4)) { --cost-rows: 4; }
+@supports (height: 1cqh) {
+  .card .cost { --coin-size: clamp(10px, calc((100cqh + 2px) / var(--cost-rows) - 2px), var(--cost-size)); }
+}
+.card .coin { --ball-size: var(--coin-size); }
 .card .coin.paid .ball-count { text-decoration: line-through; color: #b2bfd1; }
 .card .nm { padding: 1px 2px 2px; background: #f3f7fe; }
-.card .pill { padding: 1px 2px; background: transparent; border-radius: 0; font-size: clamp(10px, 2.8vw, 13px); font-weight: 900; }
+.card .pill { padding: 2px 1px; background: transparent; border-radius: 0; font-size: clamp(10px, 1.15vw, 16px); font-weight: 900; }
 
 .bank {
   align-items: center; gap: 9px; min-height: 56px; padding: 6px 9px;
-  background: linear-gradient(180deg, #182a40, #101d30); border: 1px solid #435777; border-bottom: 0; border-radius: 13px 13px 0 0;
+  background: linear-gradient(180deg, #182a40, #101d30); border: 1px solid #435777; border-radius: 11px;
 }
 .bank > strong { color: #e3edff; font-size: 12px; white-space: nowrap; }
-.bank-pool { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(3px, 1vw, 12px); }
+.bank-pool { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(3px, 1vw, 12px); width: min(100%, 470px); }
 .bank-slot { display: grid; justify-items: center; align-content: start; gap: 3px; min-width: 0; }
 .bank-token-label { color: #e4edff; font-size: 11px; font-weight: 750; line-height: 1.15; white-space: nowrap; }
 .tok.pickable { box-shadow: 0 0 0 2px #7be9c47f, 0 3px 7px #000d; }
@@ -775,45 +750,9 @@ button:disabled { cursor: default; }
   .hero-mon.m1 { right: 55%; height: 48%; }
   .hero-mon.m2 { right: 13%; height: 74%; }
   .hero-mon.m3 { right: -1%; height: 48%; }
-  .board { gap: 4px; padding-inline: 5px; grid-template-rows: repeat(4, max-content); }
-  .rowwrap { grid-template-columns: 1fr; gap: 3px; padding: 3px 5px 4px; }
-  .rowlabel { display: flex; align-items: center; justify-content: space-between; padding-left: 3px; min-height: 16px; }
-  .rowlabel strong { font-size: 12px; }
-  .deck-button { padding: 3px 6px; font-size: 10px; }
-  .card { --cost-size: 24px; }
-  #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
-  .cards:not(#row-special):has(.cost > :nth-child(3)) .card {
-    min-height: calc(3 * var(--cost-size) + 54px);
-  }
-  .cards:not(#row-special):has(.cost > :nth-child(4)) .card {
-    min-height: calc(4 * var(--cost-size) + 64px);
-  }
-  .cards:not(#row-special) .cost:has(> :nth-child(3)) { grid-template-rows: repeat(3, var(--cost-size)); }
-  .cards:not(#row-special) .cost:has(> :nth-child(4)) { grid-template-rows: repeat(4, var(--cost-size)); }
-  .bank { gap: 7px; min-height: 51px; }
-  .bank > strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .bank-pool { width: min(100%, 360px); }
-  .tok { --ball-size: clamp(28px, 8.5vw, 35px); }
-  .collection-row { gap: 7px; }
-}
-@media (max-width: 370px) {
-  .dock-summary { gap: 4px; }
-  .dock-meta { display: none; }
-  .card .cost { padding-inline: 2px 1px; }
-  .bank-token-label { font-size: 10px; }
-  #status { font-size: 9px; }
-  .me-head .btns button { min-width: 33px; padding-inline: 4px; }
-}
-@media (max-height: 560px) {
-  .bank { min-height: 43px; padding-block: 4px; }
-  .tok { --ball-size: 29px; }
-  .arena-hud { min-height: 27px; padding-block: 2px; }
-  .me-mid { margin-block: 2px; gap: 4px 7px; }
-  .rowwrap { min-height: 86px; }
-  .action-popup { top: max(118px, 28vh); }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
 }
 html { background: var(--bg); }
 body { height: auto; min-height: 100%; background-attachment: fixed; }
@@ -821,8 +760,7 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 .rival .seg button:last-child:nth-child(3n+1) { grid-column: span 2; }
 #lobby .foot a { color: #afdcff; }
 #myname { font: inherit; }
-.me-head .btns .ghost:disabled { opacity: .5; }
-.rare-row .rowlabel strong { font-size: 11px; word-break: keep-all; }
+.dock-controls .btns .ghost:disabled { opacity: .5; }
 .collection-card.evo-ready { outline: 1px solid #d1aeff; box-shadow: 0 0 8px #d1aeff77; }
 #coach-bar > div { flex: 1; }
 #modal .sound-control { margin-top: 12px; }
@@ -859,18 +797,14 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 }
 .fx-card img { width: 100%; height: 100%; object-fit: contain; }
 @media (max-width: 540px) {
-  :root { --card-ratio: .99; }
   #lobby .panel { padding: 11px 12px; }
   .rival .seg button { padding-block: 8px; }
   .rival .seg button:nth-child(5) { grid-column: span 2; }
   .rival .seg button:last-child:nth-child(3n+1) { grid-column: auto; }
 }
-@media (max-height: 760px) and (min-width: 541px) {
-  .cards .card { max-width: clamp(100px, calc((100dvh - 338px) / 4 * var(--card-ratio)), 132px); }
-}
 
 .broadcast {
-  flex: none; margin: 0 8px 4px; padding: 6px 10px; border: 1px solid #40546b;
+  min-width: 0; padding: 6px 8px; border: 1px solid #40546b;
   border-radius: 9px; background: #101d30; font-variant-numeric: tabular-nums;
 }
 .odds-line { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
@@ -885,34 +819,89 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 .odds-info { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 1px 7px; }
 #odds-call { color: #ecf1fa; font-size: 11px; }
 #odds-samples { color: #b3c4d9; font-size: 10px; }
-@media (min-width: 550px) and (max-height: 560px) {
-  .player-dock {
-    display: grid; grid-template-columns: minmax(166px, 37%) minmax(0, 1fr);
-    align-content: center; align-items: center; gap: 3px 10px;
+@media (max-width: 1080px) {
+  .player-dock .collection-strip { grid-template-columns: minmax(0, 1fr); gap: 3px; padding: 2px; }
+  .player-dock .collection-card {
+    height: clamp(21px, 5.8vh, 29px); grid-template-columns: clamp(14px, 2vw, 25px) minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr); align-items: center; border-radius: 5px;
   }
-  .dock-summary, .me-head { grid-area: 1 / 1; }
-  .player-dock .score-track { grid-area: 2 / 1; }
-  .me-mid { grid-area: 3 / 1; }
-  .player-dock .collection-row { grid-area: 1 / 2 / 3 / 3; margin-top: 0; }
-  .me .collection-row { grid-row-end: 4; }
-  .playfield {
-    display: grid; grid-template-columns: minmax(222px, 2fr) minmax(0, 3fr);
-    grid-template-rows: minmax(0, 1fr) auto;
+  .player-dock .collection-art { grid-area: 1 / 1; width: 96%; }
+  .player-dock .collection-name {
+    grid-area: 1 / 2; text-align: left; font-size: clamp(8px, 1.2vw, 11px);
+    line-height: 1.1; white-space: normal; overflow-wrap: anywhere;
   }
-  .arena-info { grid-area: 1 / 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
-  .bank { grid-area: 2 / 1; }
-  .bank > strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .bank-pool { width: 100%; gap: 2px; grid-template-columns: 4fr 3fr 3fr 3fr 4fr 4fr; }
-  .bank-token-label { font-size: 9px; }
-  .board { grid-area: 1 / 2 / -1 / 3; }
-  .rowwrap { grid-template-columns: 1fr; gap: 3px; padding-inline: 5px; }
-  .rowlabel { display: flex; align-items: center; justify-content: space-between; }
-  .cards .card { --cost-size: 24px; max-width: 132px; }
-  #row-special { grid-template-columns: repeat(2, minmax(0, 114px)); justify-content: center; }
+  .player-dock .collection-card .ribbon { grid-area: 1 / 3; display: flex; gap: 2px; padding-inline: 2px; align-self: stretch; }
+  .player-dock .evo-preview { width: 12px; }
+  .player-dock .evo-label .ball-token { --ball-size: 12px; }
+  .player-dock .evo-label { padding: 0 1px; }
+  .player-dock .bonus-count { font-size: 9px; }
+  .card .ribbon { padding-inline: 2px; }
+  .card .ribbon .vp { font-size: clamp(8px, 1.5vw, 12px); }
+  .card .evo-label { padding-inline: 1px; gap: 1px; }
+  .card .evo-preview { width: clamp(10px, min(1.85vw, 3.8vh), 16px); }
+  .card .evo-label .ball-token { --ball-size: 12px; }
 }
-@media (max-height: 560px) {
-  .broadcast { margin-bottom: 2px; padding-block: 2px; }
-  .odds-line strong { font-size: 12px; }
+@media (max-width: 1080px), (max-height: 380px) {
+  .market-body:has(.coin:nth-child(4)) { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .market-body:has(.coin:nth-child(4)) .cost { --cost-rows: 2; grid-row: 2; display: flex; flex-wrap: wrap; justify-content: center; padding: 2px; }
+  .market-body:has(.coin:nth-child(4)) .art { grid-row: 1; }
+}
+@media (max-height: 485px) {
+  #game { --gutter: 5px; --side-width: clamp(86px, 15.3vw, 166px); }
+  .player-dock { gap: 4px; padding: 5px; border-radius: 9px; }
+  .dock-summary { padding-block: 1px 3px; }
+  .dock-score small { font-size: 9px; }
+  .dock-resources { gap: 3px; }
+  .dock-resource { gap: 1px; }
+  .resource-name, .collection-title { font-size: 10px; }
+  .collection-title { min-height: 15px; }
+  .collection-row { gap: 4px; }
+  .arena-hud { min-height: 24px; padding: 2px 5px; font-size: 10px; }
+  #turn-tag { padding-block: 1px; }
+  #coach-bar, .broadcast { gap: 4px; padding: 3px 5px; }
+  #coach-caption { font-size: 9px; }
+  #coach-tip, .odds-line b, #odds-call { font-size: 10px; }
+  #coach-open, #rival-intent { min-height: 26px; padding: 3px 5px; font-size: 10px; white-space: nowrap; }
+  .odds-line strong { font-size: 13px; }
+  #odds-samples { display: none; }
+  #odds-call { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .ribbon { height: clamp(18px, 5.8vh, 24px); }
+  .bank { min-height: 44px; padding: 4px 6px; }
+  .bank-pool { gap: 2px; }
+  .bank-token-label { font-size: 9px; }
+  .tok { --ball-size: clamp(23px, 7vh, 29px); }
+  .dock-controls { padding-top: 3px; gap: 3px; }
+  .dock-controls .btns { gap: 3px; }
+  .dock-controls .btns button { min-height: 27px; padding-inline: 3px; font-size: 10px; }
+  #menu { min-width: 18px; }
+  #status { font-size: 9px; }
+  .action-popup { top: 34vh; }
+}
+@media (max-width: 740px) {
+  .rowwrap { padding: 3px; gap: 3px; border-radius: 6px; }
+  .rowlabel { min-height: 20px; }
+  .rowlabel strong { font-size: 9px; }
+  .deck-button { font-size: 9px; padding-inline: 3px; }
+  .card .ribbon { padding-inline: 1px; }
+  .evo-label { padding-inline: 1px; gap: 1px; }
+  .card .cost { padding-inline: 1px; gap: 1px; }
+  .card .pill { font-size: 9px; padding-inline: 0; }
+  .bank > strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+@media (max-width: 620px) {
+  .player-dock { padding-inline: 3px; }
+  .resource-values { gap: 1px; }
+}
+.orientation-guide { display: none; }
+@media (orientation: portrait) and (max-width: 650px) {
+  #game:not(.hidden), #game:not(.hidden) ~ :is(#modal, #action-popup, #effects) { visibility: hidden; }
+  #game:not(.hidden) + .orientation-guide {
+    position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(ellipse at 50% 35%, #233956, #0b1325 68%); text-align: center;
+  }
+  .orientation-guide strong { color: var(--ink); font-size: clamp(21px, 5.5vw, 29px); }
+  .orientation-guide p { color: var(--dim); }
+  .orientation-guide button { padding: 8px 16px; }
 }
 .lesson header { gap: 8px; }
 .lesson-mode { color: var(--dim); font-size: 12px; }
@@ -955,10 +944,6 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
   #coach-open, #rival-intent { padding-inline: 6px; }
   .lesson-tile { padding: 5px; gap: 4px; }
   .lesson-tile img { width: 34px; height: 34px; }
-}
-@media (max-width: 540px) and (max-height: 560px) {
-  #odds-samples { display: none; }
-  #coach-bar { padding-block: 3px; }
 }
 </style>
 </head>
@@ -1016,17 +1001,27 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
 
 <!-- ── 게임 ─────────────────────────────────────────── -->
 <section id="game" class="screen hidden">
-  <section id="rivalbar" class="player-dock rivalbar" aria-label="상대 카드 현황">
-    <div id="rival-summary" class="dock-summary"></div>
-    <div class="score-track" id="rival-progress" aria-hidden="true"><b></b></div>
-    <div class="collection-row">
-      <div class="collection-group owned-group">
-        <div class="collection-title">획득 <b id="rival-owned-count">0</b></div>
-        <div id="rival-owned" class="collection-strip"></div>
+  <section id="rivalbar" class="player-dock rivalbar" aria-label="상대 상태">
+    <header class="dock-head">
+      <div class="dock-caption"><span>상대</span><small id="rival-evo-count"></small></div>
+      <div class="dock-summary">
+        <span id="rival-name" class="dock-name"></span>
+        <strong id="rival-score" class="dock-score"><b id="rival-score-value">0</b><small> / 18점</small></strong>
       </div>
+      <div class="score-track" id="rival-progress" aria-hidden="true"><b></b></div>
+    </header>
+    <div class="dock-resources">
+      <div id="rival-tokens" class="dock-resource"><div class="resource-name"><span>보유 볼</span><span class="resource-limit"></span></div><div class="resource-values"></div></div>
+      <div id="rival-bonus" class="dock-resource"><div class="resource-name">카드 보너스</div><div class="resource-values"></div></div>
+    </div>
+    <div class="collection-row">
       <div class="collection-group kept-group">
         <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="rival-kept-count">0</b></div>
         <div id="rival-kept" class="collection-strip kept-strip"></div>
+      </div>
+      <div class="collection-group owned-group">
+        <div class="collection-title">획득 <b id="rival-owned-count">0</b></div>
+        <div id="rival-owned" class="collection-strip"></div>
       </div>
     </div>
   </section>
@@ -1051,44 +1046,55 @@ body { height: auto; min-height: 100%; background-attachment: fixed; }
       </aside>
     </div>
     <div id="board" class="board" aria-label="포켓몬 시장">
-      <section class="rowwrap rare-row" aria-labelledby="label-special"><div class="rowlabel" id="label-special"><strong>전설·환상 / 희귀</strong></div><div class="cards" id="row-special"></div></section>
-      <section class="rowwrap tier-3" aria-labelledby="label-3"><div class="rowlabel"><strong id="label-3">3단계</strong><button class="deck-button" id="deck-3" data-focus="deck-3" data-sound="none" type="button"></button></div><div class="cards" id="row-3"></div></section>
-      <section class="rowwrap tier-2" aria-labelledby="label-2"><div class="rowlabel"><strong id="label-2">2단계</strong><button class="deck-button" id="deck-2" data-focus="deck-2" data-sound="none" type="button"></button></div><div class="cards" id="row-2"></div></section>
       <section class="rowwrap tier-1" aria-labelledby="label-1"><div class="rowlabel"><strong id="label-1">1단계</strong><button class="deck-button" id="deck-1" data-focus="deck-1" data-sound="none" type="button"></button></div><div class="cards" id="row-1"></div></section>
+      <section class="rowwrap tier-2" aria-labelledby="label-2"><div class="rowlabel"><strong id="label-2">2단계</strong><button class="deck-button" id="deck-2" data-focus="deck-2" data-sound="none" type="button"></button></div><div class="cards" id="row-2"></div></section>
+      <section class="rowwrap tier-3" aria-labelledby="label-3"><div class="rowlabel"><strong id="label-3">3단계</strong><button class="deck-button" id="deck-3" data-focus="deck-3" data-sound="none" type="button"></button></div><div class="cards" id="row-3"></div></section>
+      <section class="rowwrap rare-row" aria-labelledby="label-special"><div class="rowlabel"><strong id="label-special" aria-label="희귀·전설·환상">희귀·전설</strong></div><div class="cards" id="row-special"></div></section>
     </div>
     <section id="bank" class="bank" aria-labelledby="bank-label"><strong id="bank-label">볼 은행</strong><div class="bank-pool"></div></section>
   </main>
 
-  <section id="me" class="player-dock me" aria-label="내 카드 현황">
-    <div class="me-head">
-      <span id="me-name">나</span>
-      <span id="me-score" class="score"><b id="me-score-value">0</b><small> / 18점</small></span>
-      <div id="picks" class="picks"></div>
-      <span id="status">당신의 차례</span>
+  <section id="me" class="player-dock me" aria-label="내 상태">
+    <header class="dock-head">
+      <div class="dock-caption"><span>내 상태</span><small id="me-evo-count"></small></div>
+      <div class="dock-summary">
+        <span id="me-name" class="dock-name">나</span>
+        <strong id="me-score" class="dock-score"><b id="me-score-value">0</b><small> / 18점</small></strong>
+      </div>
+      <div class="score-track" id="me-progress" aria-hidden="true"><b></b></div>
+    </header>
+    <div class="dock-resources">
+      <div id="me-tokens" class="dock-resource"><div class="resource-name"><span>보유 볼</span><span class="resource-limit"></span></div><div class="resource-values"></div></div>
+      <div id="me-bonus" class="dock-resource"><div class="resource-name">카드 보너스</div><div class="resource-values"></div></div>
+    </div>
+    <div class="collection-row">
+      <div class="collection-group kept-group">
+        <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="me-kept-count">0</b></div>
+        <div id="me-kept" class="collection-strip kept-strip"></div>
+      </div>
+      <div class="collection-group owned-group">
+        <div class="collection-title"><button id="me-library" class="collection-link" type="button" aria-haspopup="dialog" disabled>획득 <b id="me-owned-count">0</b></button></div>
+        <div id="me-owned" class="collection-strip"></div>
+      </div>
+    </div>
+    <div class="dock-controls">
+      <div class="dock-selection"><span id="status">당신의 차례</span><div id="picks" class="picks"></div></div>
       <div class="btns">
         <button id="cancel" class="ghost" data-sound="none" disabled>취소</button>
         <button id="confirm" class="primary" data-sound="none" disabled>확정</button>
         <button id="menu" class="ghost" aria-label="대전 메뉴">≡</button>
       </div>
     </div>
-    <div class="score-track" id="me-progress" aria-hidden="true"><b></b></div>
-    <div class="me-mid">
-      <div id="me-tokens" class="me-tokens"></div>
-      <div id="me-bonus" class="me-bonus"></div>
-    </div>
-    <div class="collection-row">
-      <div class="collection-group owned-group">
-        <div class="collection-title"><button id="me-library" class="collection-link" type="button" aria-haspopup="dialog" disabled>획득 <b id="me-owned-count">0</b></button></div>
-        <div id="me-owned" class="collection-strip"></div>
-      </div>
-      <div class="collection-group kept-group">
-        <div class="collection-title"><span class="reserve-dot"></span>찜 <b id="me-kept-count">0</b></div>
-        <div id="me-kept" class="collection-strip kept-strip"></div>
-      </div>
-    </div>
   </section>
 </section>
 
+<aside class="orientation-guide" aria-label="가로 화면 안내">
+  <div>
+    <strong>휴대폰을 가로로 돌려 주세요</strong>
+    <p>판 전체와 양쪽 플레이어 상태를 한 화면에서 볼 수 있습니다.</p>
+    <button id="rotate-lobby" class="ghost" type="button">로비로</button>
+  </div>
+</aside>
 <div id="modal" class="modal hidden"><div class="modal-in" id="modal-in" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 <div id="effects" aria-hidden="true"></div>
 <div id="action-popup" class="action-popup hidden" role="status" aria-atomic="true"></div>
@@ -2810,8 +2816,6 @@ function startGame(mode = null, seed) {
   feed(training ? '코치와 함께 다음 수를 읽어 보세요' : '카드를 누르거나 볼을 선택하세요');
   playSound('start');
   step();
-  const board = $('#board');
-  if (board.scrollHeight > board.clientHeight) board.scrollTop = board.scrollHeight;
   $('#turn-tag').focus({ preventScroll: true });
 }
 
@@ -2823,6 +2827,7 @@ $('#rival-intent').onclick = toggleRivalIntent;
 
 $('#how').onclick = showRules;
 $('#menu').onclick = showMenu;
+$('#rotate-lobby').onclick = () => location.reload();
 
 // ── 렌더 ──────────────────────────────────────────────────────
 function pip(color, n, cls = '') {
@@ -2839,9 +2844,9 @@ function tokenPips(amounts, cls = '') {
 }
 
 function cardRibbon(c, canShowEvolution = true) {
-  const evo = canShowEvolution && c.to && c.need;
+  const next = canShowEvolution && c.need ? DEX[c.to] : null;
   return `<span class="ribbon"><span class="vp">${c.vp}</span>` +
-    (evo ? `<span class="evo-label">진화${tokenPips(c.need)}</span>` : '') +
+    (next ? `<span class="evo-label" title="${next.label || c.to}(으)로 진화"><img class="evo-preview" src="${spriteUrl(next.dex)}" loading="lazy" alt="${next.label || c.to}">${tokenPips(c.need)}</span>` : '') +
     (c.bonus > 1 ? `<span class="bonus-count">×${c.bonus}</span>` : '') + '</span>';
 }
 
@@ -2865,7 +2870,7 @@ function cardNode(c) {
     `<span class="market-body"><span class="cost">${tokenPips(c.cost, 'coin')}</span>` +
     '<span class="art"><img loading="lazy" alt=""></span></span>' +
     `<span class="nm"><span class="pill">${c.label}</span></span>`;
-  n.querySelector('img').src = spriteUrl(c.dex);
+  n.querySelector('.art img').src = spriteUrl(c.dex);
 
   return n;
 }
@@ -2874,7 +2879,7 @@ function cardNode(c) {
 function collectionCardNode(c, opts = {}) {
   const actionable = Boolean(opts.interactive);
   const evolution = opts.showEvolution && c.to && c.need;
-  const n = el('button', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}${evolution ? ' has-evo' : ''}`);
+  const n = el('button', `collection-card fam-${c.color}${opts.kept ? ' kept-card' : ''}`);
   n.type = 'button';
   n.dataset.card = c.id;
   n.dataset.focus = (opts.kept ? 'kept-' : 'owned-') + opts.side + '-' + c.id;
@@ -2882,9 +2887,9 @@ function collectionCardNode(c, opts = {}) {
   n.classList.toggle('evo-ready', Boolean(canEvolve));
   n.title = `${c.label} · ${c.vp}점 · ${BALL[c.color].name} 보너스 ${c.bonus}${evolution ? evolutionSummary(c) : ''}${canEvolve ? ' · 진화 가능' : ''}`;
   n.setAttribute('aria-label', n.title);
-  n.innerHTML = cardRibbon(c, Boolean(evolution)) + '<img loading="lazy" alt="">' +
+  n.innerHTML = cardRibbon(c, Boolean(evolution)) + '<img class="collection-art" loading="lazy" alt="">' +
     `<span class="collection-name">${c.label}</span>`;
-  n.querySelector('img').src = spriteUrl(c.dex);
+  n.querySelector('.collection-art').src = spriteUrl(c.dex);
   n.onclick = () => showCardDetail(c, {
     owner: opts.owner,
     kept: Boolean(opts.kept),
@@ -2949,14 +2954,14 @@ function showCardDetail(c, opts = {}) {
 
 function renderCollection(selector, cards, opts = {}) {
   const strip = $(selector);
-  const offset = strip.scrollLeft;
+  const offset = strip.scrollTop;
   strip.replaceChildren();
   if (!cards.length) {
     strip.appendChild(el('span', 'empty-collection', '없음'));
     return;
   }
   for (const c of cards) strip.appendChild(collectionCardNode(c, opts));
-  strip.scrollLeft = offset;
+  strip.scrollTop = offset;
 }
 
 function showOwnedCards() {
@@ -3044,6 +3049,17 @@ function renderBank(interactive) {
   }
 }
 
+function renderPlayerStatus(prefix, player, bonus) {
+  const name = $('#' + prefix + '-name');
+  name.textContent = player.name;
+  name.title = player.name;
+  $('#' + prefix + '-evo-count').textContent = player.buried.length ? `진화 ${player.buried.length}` : '';
+  $('#' + prefix + '-tokens .resource-limit').textContent = tokenCount(player) + '/' + TOKEN_LIMIT;
+  $('#' + prefix + '-tokens .resource-values').innerHTML = tokenPips(player.tokens) || '없음';
+  $('#' + prefix + '-bonus .resource-values').innerHTML = tokenPips(bonus) || '없음';
+  updateScore(prefix, player);
+}
+
 function render() {
   if (!G) return;
   const focus = document.activeElement?.dataset.focus;
@@ -3057,16 +3073,7 @@ function render() {
   const rb = $('#rivalbar');
   const rivalsTurn = G.turn === rival.id && !G.over;
   rb.classList.toggle('active', rivalsTurn);
-  const rivalBonus = bonuses(rival);
-  const rivalTokens = tokenPips(rival.tokens, 'sm');
-  $('#rival-summary').innerHTML =
-    '<span class="dock-name"></span>' +
-    '<strong class="dock-score" id="rival-score"><b id="rival-score-value"></b><small> / ' + WIN_SCORE + '점</small></strong>' +
-    '<span class="dock-meta">진화 ' + rival.buried.length + '</span>' +
-    '<span class="dock-stat"><em>토큰</em>' + (rivalTokens || '<i>없음</i>') + '</span>' +
-    '<span class="dock-stat"><em>보너스</em>' + (tokenPips(rivalBonus, 'sm') || '<i>없음</i>') + '</span>';
-  $('#rival-summary .dock-name').textContent = rival.name;
-  updateScore('rival', rival);
+  renderPlayerStatus('rival', rival, bonuses(rival));
   $('#rival-owned-count').textContent = rival.board.length;
   $('#rival-kept-count').textContent = rival.hand.length;
   renderCollection('#rival-owned', rival.board, { side: 'rival', owner: rival.name, showEvolution: true });
@@ -3079,20 +3086,14 @@ function render() {
     const deck = $('#deck-' + tier);
     const left = G.decks[tier].length;
     deck.disabled = !interactive || !left || me.hand.length >= HAND_LIMIT;
-    deck.textContent = (deck.disabled ? '덱 ' : '덱 찜 · ') + left;
+    deck.textContent = (deck.disabled ? '덱 ' : '덱 찜 ') + left;
     deck.setAttribute('aria-label', tier + '단계 덱에서 찜 · 남은 카드 ' + left + '장');
     deck.onclick = () => reserveFromDeck(tier);
   }
   renderBank(interactive);
 
   $('#me').classList.toggle('active', myTurn);
-  $('#me-name').textContent = me.name;
-  updateScore('me', me);
-  $('#me-tokens').innerHTML = '<span class="lb">토큰</span>' +
-    tokenPips(me.tokens) +
-    '<span class="lb">' + tokenCount(me) + '/' + TOKEN_LIMIT + '</span>';
-  $('#me-bonus').innerHTML = '<span class="lb">보너스</span>' +
-    (tokenPips(meBonus) || '<span class="lb">없음</span>');
+  renderPlayerStatus('me', me, meBonus);
   $('#me-owned-count').textContent = me.board.length;
   $('#me-library').disabled = !me.board.length;
   $('#me-library').setAttribute('aria-label', `획득 카드 ${me.board.length}장 모두 보기`);
